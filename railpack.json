@@ -1,0 +1,5 @@
+{
+  "build": {
+    "cmd": "chmod +x gradlew && ./gradlew clean build -x test"
+  }
+}

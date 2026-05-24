@@ -159,8 +159,13 @@
         .modal-btn-ghost{border:1px solid var(--border2);color:var(--text2);background:transparent}
         .modal-btn-ghost:hover{border-color:var(--lime);color:var(--lime)}
         .doc-links{display:flex;flex-wrap:wrap;gap:6px}
-        .doc-link{font-size:12px;padding:5px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--border);color:var(--text3);text-decoration:none;transition:color .15s,border-color .15s}
-        .doc-link:hover{color:var(--lime);border-color:rgba(200,241,53,0.3)}
+        .doc-link{font-size:12px;padding:6px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:color .15s,border-color .15s;display:inline-flex;align-items:center;gap:5px}
+        .doc-link:hover{color:var(--lime);border-color:var(--lime)}
+        .card-doc-badge{font-size:10px;font-weight:700;color:var(--lime);background:rgba(45,122,58,0.08);border:1px solid rgba(45,122,58,0.18);border-radius:999px;padding:2px 8px;display:inline-flex;align-items:center;gap:3px}
+        .share-btn{background:var(--surface);border:1px solid var(--border);color:var(--text2);border-radius:999px;padding:7px 16px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+        .share-btn:hover{border-color:var(--lime);color:var(--lime)}
+        .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--text);color:var(--bg);font-size:13px;font-weight:600;padding:10px 20px;border-radius:999px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:200}
+        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
         /* ── 스크롤바 ── */
         ::-webkit-scrollbar{width:4px}
@@ -282,12 +287,12 @@
         </div>
         <div class="result-head">
             <div class="result-count" id="resultCount"></div>
+            <button class="share-btn" id="shareBtn" style="display:none" onclick="shareResults()">🔗 결과 공유</button>
         </div>
         <div class="grid" id="welfareList"></div>
     </main>
 </div>
 
-<!-- 모달 -->
 <div class="modal-backdrop" id="modalBackdrop" onclick="handleBackdropClick(event)">
     <div class="modal" id="modal">
         <div class="modal-top-bar"></div>
@@ -311,7 +316,44 @@
 </div>
 
 <script>
-    const API = 'https://yhsmmh9021-production.up.railway.app/api/welfares';
+    const API = 'http://localhost:8080/api/welfares';
+
+    // ── 제출서류 파싱 ──
+    function parseDocLinks(raw) {
+        if (!raw || raw.trim() === '.') return [];
+        const items = [];
+        const pattern = /([^:\n]+?):\s*(https?:\/\/[^\s,)]+)/g;
+        let match;
+        while ((match = pattern.exec(raw)) !== null) {
+            const name = match[1].replace(/^[\s,]+|[\s,]+$/g, '').trim();
+            const url  = match[2].trim();
+            if (name && url) items.push({ name, url });
+        }
+        if (items.length === 0) {
+            const urls = raw.match(/https?:\/\/[^\s,\)]+/g) || [];
+            urls.forEach((url, i) => items.push({ name: `신청 링크 ${urls.length > 1 ? i+1 : ''}`.trim(), url }));
+        }
+        return items;
+    }
+
+    // ── 공유 링크 ──
+    let currentParams = null;
+
+    function shareResults() {
+        const url = currentParams
+            ? `${location.origin}${location.pathname}?${currentParams}`
+            : location.href;
+        navigator.clipboard.writeText(url).then(() => showToast()).catch(() => {
+            prompt('아래 링크를 복사하세요:', url);
+        });
+    }
+
+    function showToast() {
+        const t = document.getElementById('toast');
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
     const DISTRICTS = {
         '서울':['서초구','성동구','광진구','동대문구','중랑구','성북구','노원구','은평구','마포구','양천구','강서구','영등포구','동작구','관악구'],
         '부산':['서구','영도구','남구','해운대구','금정구','수영구','사상구','기장군'],
@@ -342,12 +384,36 @@
         document.getElementById('incomeSelect').value='';
         document.getElementById('regionCity').value='';
         document.getElementById('regionDistrict').innerHTML='<option value="">전체 (시/도만 적용)</option>';
+        document.getElementById('subSelectWrap').classList.remove('remove');
         document.getElementById('subSelectWrap').classList.remove('visible');
         document.getElementById('salesSelect').value='';
         document.getElementById('rentSelect').value='';
     }
 
-    window.onload=()=>loadAll(document.querySelector('.tab-btn.active'));
+    window.onload=()=>{
+        const p=new URLSearchParams(location.search);
+        if(p.toString()){
+            if(p.get('age'))   document.getElementById('ageInput').value=p.get('age');
+            if(p.get('income'))document.getElementById('incomeSelect').value=p.get('income');
+            if(p.get('region')){
+                const r=p.get('region');
+                const cityEl=document.getElementById('regionCity');
+                for(const opt of cityEl.options){ if(r===opt.value){cityEl.value=r;break} }
+                if(!cityEl.value){
+                    for(const [city,dists] of Object.entries(DISTRICTS)){
+                        if(dists.includes(r)){cityEl.value=city;onCityChange();document.getElementById('regionDistrict').value=r;break}
+                    }
+                }
+            }
+            if(p.get('sales'))document.getElementById('salesSelect').value=p.get('sales');
+            if(p.get('rent')) document.getElementById('rentSelect').value=p.get('rent');
+            currentParams=p.toString();
+            document.getElementById('shareBtn').style.display='flex';
+            applyCustomFilter();
+        } else {
+            loadAll(document.querySelector('.tab-btn.active'));
+        }
+    };
     function handleKeyPress(e){if(e.key==='Enter')searchByTitle()}
 
     function setActive(btn){
@@ -389,6 +455,9 @@
         try{
             const res=await fetch(`${API}/filter?${params}`);
             if(!res.ok)throw new Error();
+            currentParams=params.toString();
+            history.pushState({},'','?'+currentParams);
+            document.getElementById('shareBtn').style.display='flex';
             displayData(await res.json());
         }catch{showError()}
     }
@@ -433,6 +502,13 @@
             card.appendChild(title);
             card.innerHTML+=`<div class="card-divider"></div>`;
             card.appendChild(purpose);
+            if(w.submitLink && w.submitLink.trim() !== '.') {
+                const badge=document.createElement('span');
+                badge.className='card-doc-badge';
+                badge.textContent='📎 서류있음';
+                const tagsEl=card.querySelector('.card-tags');
+                if(tagsEl) tagsEl.appendChild(badge);
+            }
             const footer=document.createElement('div');
             footer.className='card-footer';
             footer.appendChild(agency);
@@ -440,6 +516,27 @@
             card.appendChild(footer);
             container.appendChild(card);
         });
+    }
+
+    // 🚨 외부 링크 생존여부 점검 함수 (안전장치 포함)
+    // 🚨 외부 링크 생존여부 점검 함수
+    async function checkAndGo(url) {
+        if(!url) return;
+
+        try {
+            const res = await fetch(`http://localhost:8080/api/url/check?url=${encodeURIComponent(url)}`);
+            const isAlive = await res.json();
+
+            if (isAlive) {
+                window.open(url, '_blank');
+            } else {
+                alert('⚠️ 현재 해당 기관의 지원 페이지가 만료되었거나 서버 점검 중입니다.');
+            }
+        } catch (error) {
+            // 🚨 기존 window.open 대신 alert로 바꿔서 진짜 통신 에러인지 확인!
+            console.error("통신 에러 상세 내용:", error);
+            alert('백엔드 서버와 통신에 실패했습니다. (CORS 에러 또는 서버 꺼짐)');
+        }
     }
 
     function openModal(w){
@@ -455,15 +552,23 @@
             `<div class="meta-row"><span class="meta-key">${k}</span><span class="meta-val">${v}</span></div>`
         ).join('');
 
-        let docsHtml='';
-        if(w.submitLink?.trim().startsWith('http')){
-            docsHtml=`<div class="modal-section-label">신청 서류</div><div class="doc-links">
-      ${w.submitLink.split(',').map((u,idx)=>`<a href="${u.trim()}" target="_blank" class="doc-link">양식 ${idx+1}</a>`).join('')}</div>`;
+        // ⭕ 제출 서류: 기존 parseDocLinks 완전 보존 및 순수 <a> 태그로 바로 다운로드 가능하게 유지
+        const docItems = parseDocLinks(w.submitLink);
+        let docsHtml = '';
+        if (docItems.length) {
+            docsHtml = `<div>
+      <div class="modal-section-label">제출 서류</div>
+      <div class="doc-links">
+        ${docItems.map(d=>`<a href="${d.url}" target="_blank" class="doc-link">📄 ${d.name}</a>`).join('')}
+      </div>
+    </div>`;
         }
         document.getElementById('modalDocs').innerHTML=docsHtml;
+
+        // 🚨 상세보기 & 신청 사이트: checkAndGo 로직을 태우는 버튼으로 교체
         document.getElementById('modalActions').innerHTML=`
-    ${w.infoUrl?`<a href="${w.infoUrl}" target="_blank" class="modal-btn modal-btn-primary">상세보기</a>`:''}
-    ${w.siteLink?`<a href="${w.siteLink}" target="_blank" class="modal-btn modal-btn-ghost">신청 사이트</a>`:''}`;
+    ${w.infoUrl?`<button onclick="checkAndGo('${w.infoUrl}')" class="modal-btn modal-btn-primary">상세보기</button>`:''}
+    ${w.siteLink?`<button onclick="checkAndGo('${w.siteLink}')" class="modal-btn modal-btn-ghost">신청 사이트</button>`:''}`;
 
         document.body.style.overflow='hidden';
         document.getElementById('modal').scrollTop=0;
@@ -486,5 +591,6 @@
             `<div class="empty"><div class="empty-icon">⚠️</div><p>데이터를 불러오지 못했습니다.</p></div>`;
     }
 </script>
+<div class="toast" id="toast">링크가 복사됐어요!</div>
 </body>
 </html>

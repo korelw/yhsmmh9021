@@ -8,6 +8,7 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/welfares")
+
 @RequiredArgsConstructor
 public class WelfareController {
 

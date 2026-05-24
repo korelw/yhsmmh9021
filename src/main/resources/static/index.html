@@ -315,11 +315,8 @@
     </div>
 </div>
 
-<div class="toast" id="toast">📋 링크가 복사되었습니다!</div>
-
 <script>
-    // 🎯 1. 기존 localhost였던 기본 API 주소를 실제 Railway 배포 주소로 변경
-    const API = 'https://yhsmmh9021-production-7630.up.railway.app/api/welfares';
+    const API = 'http://localhost:8080/api/welfares';
 
     // ── 제출서류 파싱 ──
     function parseDocLinks(raw) {
@@ -387,6 +384,7 @@
         document.getElementById('incomeSelect').value='';
         document.getElementById('regionCity').value='';
         document.getElementById('regionDistrict').innerHTML='<option value="">전체 (시/도만 적용)</option>';
+        document.getElementById('subSelectWrap').classList.remove('remove');
         document.getElementById('subSelectWrap').classList.remove('visible');
         document.getElementById('salesSelect').value='';
         document.getElementById('rentSelect').value='';
@@ -520,13 +518,13 @@
         });
     }
 
-    // 🚨 외부 링크 생존여부 점검 함수 (오타 완벽 수정한 버전)
+    // 🚨 외부 링크 생존여부 점검 함수 (안전장치 포함)
+    // 🚨 외부 링크 생존여부 점검 함수
     async function checkAndGo(url) {
         if(!url) return;
 
         try {
-            // 🎯 2. 중복된 https:// 와 슬래시 오타를 깔끔하게 정상 주소로 수정!
-            const res = await fetch(`https://yhsmmh9021-production-7630.up.railway.app/api/url/check?url=${encodeURIComponent(url)}`);
+            const res = await fetch(`https://네-백엔드-도메인-주소.up.railway.app/api/url/check?url=${encodeURIComponent(url)}`);
             const isAlive = await res.json();
 
             if (isAlive) {
@@ -535,9 +533,9 @@
                 alert('⚠️ 현재 해당 기관의 지원 페이지가 만료되었거나 서버 점검 중입니다.');
             }
         } catch (error) {
+            // 🚨 기존 window.open 대신 alert로 바꿔서 진짜 통신 에러인지 확인!
             console.error("통신 에러 상세 내용:", error);
-            // 점검 도중 에러가 나더라도 사용자가 이용 가능하도록 일단 최후의 보루로 열어주게 원복!
-            window.open(url, '_blank');
+            alert('백엔드 서버와 통신에 실패했습니다. (CORS 에러 또는 서버 꺼짐)');
         }
     }
 
@@ -554,6 +552,7 @@
             `<div class="meta-row"><span class="meta-key">${k}</span><span class="meta-val">${v}</span></div>`
         ).join('');
 
+        // ⭕ 제출 서류: 기존 parseDocLinks 완전 보존 및 순수 <a> 태그로 바로 다운로드 가능하게 유지
         const docItems = parseDocLinks(w.submitLink);
         let docsHtml = '';
         if (docItems.length) {
@@ -566,26 +565,32 @@
         }
         document.getElementById('modalDocs').innerHTML=docsHtml;
 
+        // 🚨 상세보기 & 신청 사이트: checkAndGo 로직을 태우는 버튼으로 교체
         document.getElementById('modalActions').innerHTML=`
     ${w.infoUrl?`<button onclick="checkAndGo('${w.infoUrl}')" class="modal-btn modal-btn-primary">상세보기</button>`:''}
     ${w.siteLink?`<button onclick="checkAndGo('${w.siteLink}')" class="modal-btn modal-btn-ghost">신청 사이트</button>`:''}`;
 
-        document.getElementById('modalBackdrop').classList.add('open');
+        document.body.style.overflow='hidden';
+        document.getElementById('modal').scrollTop=0;
+        requestAnimationFrame(()=>document.getElementById('modalBackdrop').classList.add('open'));
     }
 
     function closeModal(){
         document.getElementById('modalBackdrop').classList.remove('open');
+        document.body.style.overflow='';
     }
 
     function handleBackdropClick(e){
-        if(e.target.id === 'modalBackdrop') closeModal();
+        if(e.target===document.getElementById('modalBackdrop'))closeModal();
     }
+
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 
     function showError(){
-        const container=document.getElementById('welfareList');
-        container.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><p>데이터를 불러오는 중 에러가 발생했습니다.</p></div>`;
+        document.getElementById('welfareList').innerHTML=
+            `<div class="empty"><div class="empty-icon">⚠️</div><p>데이터를 불러오지 못했습니다.</p></div>`;
     }
 </script>
-
+<div class="toast" id="toast">링크가 복사됐어요!</div>
 </body>
 </html>

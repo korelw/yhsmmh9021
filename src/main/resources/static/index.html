@@ -270,8 +270,10 @@
             <button class="tab-btn" onclick="searchByKeyword('복지', this)">복지</button>
             <button class="tab-btn" onclick="searchByKeyword('취업', this)">취업</button>
             <button class="tab-btn" onclick="searchByKeyword('창업', this)">창업</button>
-            <button class="tab-btn" onclick="searchByKeyword('주거', this)">주거</button>
+            <button class="tab-btn" onclick="searchByKeyword('생활지원', this)">생활지원</button>
             <button class="tab-btn" onclick="searchByKeyword('교육', this)">교육</button>
+            <button class="tab-btn" onclick="searchByKeyword('금융', this)">금융</button>
+            <button class="tab-btn" onclick="searchByKeyword('문화/예술', this)">문화/예술</button>
         </div>
         <div class="result-head">
             <div class="result-count" id="resultCount"></div>
@@ -561,7 +563,11 @@
     <span class="tag tag-region">${w.region||'전국'}</span>
     <span class="tag tag-keyword">${w.keyword||'기타'}</span>`;
         document.getElementById('modalTitle').textContent=w.title||'제목 없음';
-        document.getElementById('modalPurpose').textContent=w.purpose||'설명 없음';
+
+        const purposeText = (w.purpose || '설명 없음')
+            .replace(/\s*-\s*/g, '<br>- ');
+
+        document.getElementById('modalPurpose').innerHTML = purposeText;
 
         // ✅ 나이 표시 형식 변경 (18,39 -> 18~39)
         const metaRows=[

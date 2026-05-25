@@ -522,8 +522,12 @@
         document.getElementById('modalTitle').textContent=w.title||'제목 없음';
         document.getElementById('modalPurpose').textContent=w.purpose||'설명 없음';
 
-        const metaRows=[['기관',w.agency],['지역',w.region],['소득',w.income],['나이',w.age]]
-            .filter(([,v])=>v&&v!=='.'&&v.trim()!=='');
+        const metaRows=[
+            ['기관',w.agency],
+            ['지역',w.region],
+            ['소득',w.income],
+            ['나이',w.age ? w.age.replace(/,/g, '~') : '']  // ✅ , → ~ 변환
+        ].filter(([,v])=>v&&v!=='.'&&v.trim()!=='');
         document.getElementById('modalMeta').innerHTML=metaRows.map(([k,v])=>
             `<div class="meta-row"><span class="meta-key">${k}</span><span class="meta-val">${v}</span></div>`
         ).join('');

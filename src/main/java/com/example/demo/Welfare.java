@@ -40,6 +40,5 @@ public class Welfare {
     private String rent;
     private String area;
 
-    // ✔ DB 그대로 문자열 사용 (핵심)
     private String age;
 }

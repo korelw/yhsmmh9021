@@ -306,8 +306,8 @@
 <div class="toast" id="toast">링크가 복사됐어요!</div>
 
 <script>
-    // ✅ 수정 1: Railway 배포 URL로 변경
     const API = 'https://yhsmmh9021-production-7630.up.railway.app/api/welfares';
+    let allData = []; // 전체 데이터 저장
 
     // ── 제출서류 파싱 ──
     function parseDocLinks(raw) {
@@ -327,20 +327,29 @@
         return items;
     }
 
-    // ── 공유 링크 ──
+    // ── 1️⃣ 필터 결과 공유 (조건 적용 결과 링크) ──
     let currentParams = null;
 
     function shareResults() {
         const url = currentParams
             ? `${location.origin}${location.pathname}?${currentParams}`
             : location.href;
-        navigator.clipboard.writeText(url).then(() => showToast()).catch(() => {
+        navigator.clipboard.writeText(url).then(() => showToast('링크가 복사됐어요!')).catch(() => {
             prompt('아래 링크를 복사하세요:', url);
         });
     }
 
-    function showToast() {
+    // ── 2️⃣ 개별 카드 공유 (특정 정책 상세 링크) ──
+    function shareCard(cardId) {
+        const url = `${location.origin}${location.pathname}?id=${cardId}`;
+        navigator.clipboard.writeText(url).then(() => showToast('카드 링크가 복사됐어요!')).catch(() => {
+            prompt('아래 링크를 복사하세요:', url);
+        });
+    }
+
+    function showToast(message) {
         const t = document.getElementById('toast');
+        t.textContent = message;
         t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 2200);
     }
@@ -380,9 +389,28 @@
         document.getElementById('rentSelect').value='';
     }
 
-    window.onload=()=>{
+    // ── 페이지 로드 ──
+    window.onload=async ()=>{
         const p=new URLSearchParams(location.search);
-        if(p.toString()){
+
+        // ✅ 개별 카드 ID가 있으면 해당 카드 모달 열기
+        if(p.get('id')) {
+            try {
+                const data = await fetch(API).then(r=>r.json());
+                allData = data;
+                const card = data.find(w => w.id == p.get('id'));
+                if(card) {
+                    displayData(data);
+                    setTimeout(() => openModal(card), 300);
+                    return;
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        // ✅ 필터 조건이 있으면 조건 복원
+        if(p.toString() && !p.get('id')){
             if(p.get('age'))   document.getElementById('ageInput').value=p.get('age');
             if(p.get('income'))document.getElementById('incomeSelect').value=p.get('income');
             if(p.get('region')){
@@ -414,20 +442,32 @@
 
     async function loadAll(btn){
         setActive(btn);
-        try{displayData(await fetch(API).then(r=>r.json()))}
+        try{
+            const data = await fetch(API).then(r=>r.json());
+            allData = data;
+            displayData(data);
+        }
         catch{showError()}
     }
 
     async function searchByTitle(){
         const title=document.getElementById('searchInput').value.trim();
         if(!title){alert('검색어를 입력하세요.');return}
-        try{displayData(await fetch(`${API}/search?title=${encodeURIComponent(title)}`).then(r=>r.json()))}
+        try{
+            const data = await fetch(`${API}/search?title=${encodeURIComponent(title)}`).then(r=>r.json());
+            allData = data;
+            displayData(data);
+        }
         catch{showError()}
     }
 
     async function searchByKeyword(keyword,btn){
         setActive(btn);
-        try{displayData(await fetch(`${API}/keyword?keyword=${encodeURIComponent(keyword)}`).then(r=>r.json()))}
+        try{
+            const data = await fetch(`${API}/keyword?keyword=${encodeURIComponent(keyword)}`).then(r=>r.json());
+            allData = data;
+            displayData(data);
+        }
         catch{showError()}
     }
 
@@ -446,10 +486,12 @@
         try{
             const res=await fetch(`${API}/filter?${params}`);
             if(!res.ok)throw new Error();
+            const data = await res.json();
+            allData = data;
             currentParams=params.toString();
             history.pushState({},'','?'+currentParams);
             document.getElementById('shareBtn').style.display='flex';
-            displayData(await res.json());
+            displayData(data);
         }catch{showError()}
     }
 
@@ -509,7 +551,6 @@
         });
     }
 
-    // ✅ 수정 2: window.open으로 단순화 (백엔드 /api/url/check 엔드포인트 불필요)
     function checkAndGo(url) {
         if (!url) return;
         window.open(url, '_blank');
@@ -522,12 +563,14 @@
         document.getElementById('modalTitle').textContent=w.title||'제목 없음';
         document.getElementById('modalPurpose').textContent=w.purpose||'설명 없음';
 
+        // ✅ 나이 표시 형식 변경 (18,39 -> 18~39)
         const metaRows=[
             ['기관',w.agency],
             ['지역',w.region],
             ['소득',w.income],
-            ['나이',w.age ? w.age.replace(/,/g, '~') : '']  // ✅ , → ~ 변환
+            ['나이',w.age ? w.age.replace(/,/g, '~') : '']
         ].filter(([,v])=>v&&v!=='.'&&v.trim()!=='');
+
         document.getElementById('modalMeta').innerHTML=metaRows.map(([k,v])=>
             `<div class="meta-row"><span class="meta-key">${k}</span><span class="meta-val">${v}</span></div>`
         ).join('');
@@ -544,9 +587,11 @@
         }
         document.getElementById('modalDocs').innerHTML=docsHtml;
 
+        // ✅ 2️⃣ 개별 카드 공유 버튼 추가
         document.getElementById('modalActions').innerHTML=`
     ${w.infoUrl?`<button onclick="checkAndGo('${w.infoUrl}')" class="modal-btn modal-btn-primary">상세보기</button>`:''}
-    ${w.siteLink?`<button onclick="checkAndGo('${w.siteLink}')" class="modal-btn modal-btn-ghost">신청 사이트</button>`:''}`;
+    ${w.siteLink?`<button onclick="checkAndGo('${w.siteLink}')" class="modal-btn modal-btn-ghost">신청 사이트</button>`:''}
+    <button onclick="shareCard(${w.id})" class="modal-btn modal-btn-ghost">🔗 카드 공유</button>`;
 
         document.body.style.overflow='hidden';
         document.getElementById('modal').scrollTop=0;

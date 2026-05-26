@@ -325,9 +325,8 @@
         document.body.style.zoom = scale;
     }
     const API = 'https://yhsmmh9021-production-7630.up.railway.app/api/welfares';
-    let allData = []; // 전체 데이터 저장
+    let allData = [];
 
-    // ── 제출서류 파싱 ──
     function parseDocLinks(raw) {
         if (!raw || raw.trim() === '.') return [];
         const items = [];
@@ -345,7 +344,6 @@
         return items;
     }
 
-    // ── 1️⃣ 필터 결과 공유 (조건 적용 결과 링크) ──
     let currentParams = null;
 
     function shareResults() {
@@ -356,8 +354,6 @@
             prompt('아래 링크를 복사하세요:', url);
         });
     }
-
-    // ── 2️⃣ 개별 카드 공유 (특정 정책 상세 링크) ──
     function shareCard(cardId) {
         const url = `${location.origin}${location.pathname}?id=${cardId}`;
         navigator.clipboard.writeText(url).then(() => showToast('카드 링크가 복사됐어요!')).catch(() => {
@@ -407,11 +403,8 @@
         document.getElementById('rentSelect').value='';
     }
 
-    // ── 페이지 로드 ──
     window.onload=async ()=>{
         const p=new URLSearchParams(location.search);
-
-        // ✅ 개별 카드 ID가 있으면 해당 카드 모달 열기
         if(p.get('id')) {
             try {
                 const data = await fetch(API).then(r=>r.json());
@@ -427,7 +420,6 @@
             }
         }
 
-        // ✅ 필터 조건이 있으면 조건 복원
         if(p.toString() && !p.get('id')){
             if(p.get('age'))   document.getElementById('ageInput').value=p.get('age');
             if(p.get('income'))document.getElementById('incomeSelect').value=p.get('income');
@@ -586,7 +578,7 @@
 
         const metaRows=[
             ['기관',w.agency],
-            ['지역',w.region],
+            ['기한',w.region],
             ['소득',w.income],
             ['나이',w.age ? w.age.replace(/,/g, '~') : '']
         ].filter(([,v])=>v&&v!=='.'&&v.trim()!=='');
@@ -607,7 +599,6 @@
         }
         document.getElementById('modalDocs').innerHTML=docsHtml;
 
-        // ✅ URL 여부 체크해서 버튼/텍스트 구분
         let actionsHtml = '';
 
         if (w.infoUrl) {

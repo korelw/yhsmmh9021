@@ -601,8 +601,15 @@
 
         if (w.siteLink && w.siteLink.trim() !== '.') {
             const isURL = w.siteLink.startsWith('http://') || w.siteLink.startsWith('https://');
+            const deadline = w.deadline ? w.deadline.trim() : '';
+            const isExpired = deadline === '기간종료' || deadline === '선착순마감';
+
             if (isURL) {
-                actionsHtml += `<button onclick="checkAndGo('${w.siteLink}')" class="modal-btn modal-btn-ghost">신청 사이트</button>`;
+                if (isExpired) {
+                    actionsHtml += `<button onclick="alert('⚠️ ${deadline}\\n현재 신청이 불가능한 정책입니다.')" class="modal-btn modal-btn-ghost" style="opacity:0.5;cursor:not-allowed;">신청 사이트 (${deadline})</button>`;
+                } else {
+                    actionsHtml += `<button onclick="checkAndGo('${w.siteLink}')" class="modal-btn modal-btn-ghost">신청 사이트</button>`;
+                }
             } else {
                 actionsHtml += `<div class="modal-text-info">📍 ${w.siteLink}</div>`;
             }

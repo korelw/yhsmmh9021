@@ -41,4 +41,5 @@ public class Welfare {
     private String area;
 
     private String age;
+    private String deadline;
 }

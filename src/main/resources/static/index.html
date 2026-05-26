@@ -156,7 +156,10 @@
         .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--text);color:var(--bg);font-size:13px;font-weight:600;padding:10px 20px;border-radius:999px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:200}
         .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-        ::-webkit-scrollbar{width:4px}
+        ::-webkit-scrollbar{width:10px}
+        ::-webkit-scrollbar-track{background:#f0ede8}
+        ::-webkit-scrollbar-thumb{background:var(--lime);border-radius:4px}
+        ::-webkit-scrollbar-thumb:hover{background:var(--lime-dim)}
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:4px}
 

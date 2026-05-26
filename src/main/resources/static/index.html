@@ -178,7 +178,14 @@
 
 <header>
     <div class="logo">청년<span>정책</span></div>
-    <div class="header-badge">Youth Policy Portal</div>
+    <div style="display:flex;align-items:center;gap:12px">
+        <select onchange="changeFontSize(this.value)" style="font-size:11px;font-family:inherit;border:1px solid var(--border2);border-radius:999px;padding:4px 12px;background:var(--bg2);color:var(--text2);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none">
+            <option value="14">작게</option>
+            <option value="16" selected>중간</option>
+            <option value="18">크게</option>
+        </select>
+        <div class="header-badge">Youth Policy Portal</div>
+    </div>
 </header>
 
 <section class="hero">
@@ -309,6 +316,9 @@
 <div class="toast" id="toast">링크가 복사됐어요!</div>
 
 <script>
+    function changeFontSize(size) {
+        document.body.style.fontSize = size + 'px';
+    }
     const API = 'https://yhsmmh9021-production-7630.up.railway.app/api/welfares';
     let allData = []; // 전체 데이터 저장
 

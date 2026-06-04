@@ -177,6 +177,7 @@
 </head>
 <body>
 <button id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="position:fixed;bottom:32px;right:32px;width:44px;height:44px;border-radius:50%;background:var(--lime);color:#fff;border:none;font-size:20px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:99;transition:opacity .2s">↑</button>
+
 <header>
     <div class="logo">청년<span>정책</span></div>
     <div style="display:flex;align-items:center;gap:12px">
@@ -276,13 +277,13 @@
     <main>
         <div class="tabs-row">
             <button class="tab-btn active" onclick="loadAll(this)">전체보기</button>
-            <button class="tab-btn" onclick="searchByKeyword('복지', this)">복지</button>
-            <button class="tab-btn" onclick="searchByKeyword('취업', this)">취업</button>
-            <button class="tab-btn" onclick="searchByKeyword('창업', this)">창업</button>
-            <button class="tab-btn" onclick="searchByKeyword('생활지원', this)">생활지원</button>
-            <button class="tab-btn" onclick="searchByKeyword('교육', this)">교육</button>
-            <button class="tab-btn" onclick="searchByKeyword('금융', this)">금융</button>
-            <button class="tab-btn" onclick="searchByKeyword('문화/예술', this)">문화/예술</button>
+            <button class="tab-btn" onclick="selectKeyword('복지', this)">복지</button>
+            <button class="tab-btn" onclick="selectKeyword('취업', this)">취업</button>
+            <button class="tab-btn" onclick="selectKeyword('창업', this)">창업</button>
+            <button class="tab-btn" onclick="selectKeyword('생활지원', this)">생활지원</button>
+            <button class="tab-btn" onclick="selectKeyword('교육', this)">교육</button>
+            <button class="tab-btn" onclick="selectKeyword('금융', this)">금융</button>
+            <button class="tab-btn" onclick="selectKeyword('문화/예술', this)">문화/예술</button>
         </div>
         <div class="result-head">
             <div class="result-count" id="resultCount"></div>
@@ -314,66 +315,213 @@
     </div>
 </div>
 
-<div class="toast" id="toast">링크가 복사됐어요!</div>
+<div class="toast" id="toast"></div>
 
 <script>
-
-    function changeFontSize(size) {
-        const scale = size === '14' ? 0.85 : size === '16' ? 1 : 1.15;
-        document.documentElement.style.setProperty('font-size', scale * 100 + '%');
-        document.querySelectorAll('.card-title,.card-purpose,.card-agency,.modal-title,.modal-purpose,.meta-val,.meta-key,.tag,.doc-link,.modal-btn,.tab-btn,.result-count,.stat-label,.fg label,.hero-sub,.hero h1,.apply-btn').forEach(el => {
-            el.style.fontSize = '';
-        });
-        document.body.style.zoom = scale;
-    }
+    /* ═══════════════════════════════════════════════
+       상태 변수
+    ═══════════════════════════════════════════════ */
     const API = 'https://yhsmmh9021-production-7630.up.railway.app/api/welfares';
-    let allData = [];
-
-    window.addEventListener('scroll', () => {
-        const btn = document.getElementById('scrollTop');
-        btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
-    });
-    function parseDocLinks(raw) {
-        if (!raw || raw.trim() === '.') return [];
-        const items = [];
-        const pattern = /([^:\n]+?):\s*(https?:\/\/[^\s,)]+)/g;
-        let match;
-        while ((match = pattern.exec(raw)) !== null) {
-            const name = match[1].replace(/^[\s,]+|[\s,]+$/g, '').trim();
-            const url  = match[2].trim();
-            if (name && url) items.push({ name, url });
-        }
-        if (items.length === 0) {
-            const urls = raw.match(/https?:\/\/[^\s,\)]+/g) || [];
-            urls.forEach((url, i) => items.push({ name: `신청 링크 ${urls.length > 1 ? i+1 : ''}`.trim(), url }));
-        }
-        return items;
-    }
-
+    let allData      = [];   // 전체 데이터 캐시 (최초 1회만 fetch)
+    let activeKeyword = '';  // 현재 선택된 탭 키워드
+    let activeTitle   = '';  // 검색창 키워드
     let currentParams = null;
 
-    function shareResults() {
-        const url = currentParams
-            ? `${location.origin}${location.pathname}?${currentParams}`
-            : location.href;
-        navigator.clipboard.writeText(url).then(() => showToast('링크가 복사됐어요!')).catch(() => {
-            prompt('아래 링크를 복사하세요:', url);
-        });
-    }
-    function shareCard(cardId) {
-        const url = `${location.origin}${location.pathname}?id=${cardId}`;
-        navigator.clipboard.writeText(url).then(() => showToast('카드 링크가 복사됐어요!')).catch(() => {
-            prompt('아래 링크를 복사하세요:', url);
-        });
+    /* ═══════════════════════════════════════════════
+       데이터 로드 (캐싱)
+    ═══════════════════════════════════════════════ */
+    async function ensureData() {
+        if (allData.length > 0) return;
+        try {
+            allData = await fetch(API).then(r => r.json());
+            document.getElementById('statTotal').textContent = allData.length;
+        } catch(e) {
+            showError();
+        }
     }
 
-    function showToast(message) {
-        const t = document.getElementById('toast');
-        t.textContent = message;
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 2200);
+    /* ═══════════════════════════════════════════════
+       핵심: 모든 조건을 한 번에 클라이언트에서 적용
+       - 탭 키워드 + 검색창 키워드 + 사이드바 필터 복합 적용
+    ═══════════════════════════════════════════════ */
+    function applyAllFilters() {
+        let list = [...allData];
+
+        /* 1) 검색창 제목 필터 */
+        if (activeTitle) {
+            list = list.filter(w => w.title && w.title.includes(activeTitle));
+        }
+
+        /* 2) 탭 키워드 필터 */
+        if (activeKeyword) {
+            list = list.filter(w => w.keyword && w.keyword.includes(activeKeyword));
+        }
+
+        /* 3) 나이 필터 */
+        const age = document.getElementById('ageInput').value;
+        if (age) {
+            list = list.filter(w => {
+                if (!w.age || w.age === '' || w.age === '.') return true;
+                try {
+                    const u = parseInt(age);
+                    const a = w.age.trim();
+                    if (a.includes('~')) {
+                        const [mn, mx] = a.split('~').map(s => parseInt(s.trim()));
+                        return u >= mn && u <= mx;
+                    }
+                    if (a.includes(',')) {
+                        const [mn, mx] = a.split(',').map(s => parseInt(s.trim()));
+                        return u >= mn && u <= mx;
+                    }
+                    if (a.includes('이하')) {
+                        return u <= parseInt(a.replace(/[^0-9]/g, ''));
+                    }
+                } catch(e) { return false; }
+                return false;
+            });
+        }
+
+        /* 4) 소득 필터 */
+        const income = document.getElementById('incomeSelect').value;
+        if (income) {
+            list = list.filter(w => {
+                if (!w.income) return false;
+                if (w.income === '.') return true;
+                try {
+                    const u = parseInt(income);
+                    const ms = w.income.match(/(\d+)%/g);
+                    return ms ? ms.some(m => parseInt(m) >= u) : false;
+                } catch(e) { return false; }
+            });
+        }
+
+        /* 5) 지역 필터 ─ 핵심 수정: 시/도 + 구/군을 분리 매칭
+           예) 부산 서구 선택 시:
+             - area에 "부산" 포함 AND "서구" 포함인 경우만 통과
+             - "인천 서구"는 "부산" 없으므로 제외
+             - "대구 달서구"는 "부산" 없으므로 제외          */
+        const city     = document.getElementById('regionCity').value;
+        const district = document.getElementById('regionDistrict').value;
+
+        if (city || district) {
+            list = list.filter(w => {
+                if (!w.area) return false;
+                if (w.area === '.') return true;
+
+                if (city && district) {
+                    /* 시/도 + 구/군 둘 다 선택된 경우
+                       area에 city도 포함되고 district도 포함되어야 함
+                       단, district가 다른 도시에서도 존재하는 구 이름(서구, 남구 등)일 경우
+                       반드시 city도 함께 확인해서 교차 오염 방지 */
+                    return w.area.includes(city) && w.area.includes(district);
+                } else if (city) {
+                    /* 시/도만 선택 */
+                    return w.area.includes(city);
+                }
+                return true;
+            });
+        }
+
+        /* 6) 매출액 필터 */
+        const sales = document.getElementById('salesSelect').value;
+        if (sales) {
+            list = list.filter(w => {
+                if (!w.sales) return false;
+                if (w.sales === '.') return true;
+                return w.sales.includes(sales);
+            });
+        }
+
+        /* 7) 임차료 필터 */
+        const rent = document.getElementById('rentSelect').value;
+        if (rent) {
+            list = list.filter(w => {
+                if (!w.rent) return false;
+                if (w.rent === '.') return true;
+                return w.rent.includes(rent);
+            });
+        }
+
+        displayData(list);
     }
 
+    /* ═══════════════════════════════════════════════
+       공개 인터랙션 함수들
+    ═══════════════════════════════════════════════ */
+    function handleKeyPress(e) { if (e.key === 'Enter') searchByTitle(); }
+
+    function setActive(btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+    }
+
+    /* 전체보기 탭 */
+    async function loadAll(btn) {
+        setActive(btn);
+        activeKeyword = '';
+        activeTitle   = '';
+        document.getElementById('searchInput').value = '';
+        await ensureData();
+        applyAllFilters();
+    }
+
+    /* 탭 키워드 선택 → 상태 저장 후 복합 적용 */
+    async function selectKeyword(keyword, btn) {
+        setActive(btn);
+        activeKeyword = keyword;
+        await ensureData();
+        applyAllFilters();
+    }
+
+    /* 검색창 검색 → 상태 저장 후 복합 적용 */
+    async function searchByTitle() {
+        const title = document.getElementById('searchInput').value.trim();
+        if (!title) { alert('검색어를 입력하세요.'); return; }
+        activeTitle = title;
+        await ensureData();
+        applyAllFilters();
+    }
+
+    /* 사이드바 필터 적용 → 복합 적용 */
+    async function applyCustomFilter() {
+        await ensureData();
+        // URL 공유용 파라미터 구성
+        const params  = new URLSearchParams();
+        const age     = document.getElementById('ageInput').value;
+        const income  = document.getElementById('incomeSelect').value;
+        const city    = document.getElementById('regionCity').value;
+        const district= document.getElementById('regionDistrict').value;
+        const sales   = document.getElementById('salesSelect').value;
+        const rent    = document.getElementById('rentSelect').value;
+        if (age)      params.append('age',      age);
+        if (income)   params.append('income',   income);
+        if (city)     params.append('city',     city);
+        if (district) params.append('district', district);
+        if (sales)    params.append('sales',    sales);
+        if (rent)     params.append('rent',     rent);
+        currentParams = params.toString();
+        if (currentParams) {
+            history.pushState({}, '', '?' + currentParams);
+            document.getElementById('shareBtn').style.display = 'flex';
+        }
+        applyAllFilters();
+    }
+
+    /* 필터 초기화 */
+    function resetFilters() {
+        document.getElementById('ageInput').value    = '';
+        document.getElementById('incomeSelect').value = '';
+        document.getElementById('regionCity').value  = '';
+        document.getElementById('regionDistrict').innerHTML = '<option value="">전체 (시/도만 적용)</option>';
+        document.getElementById('subSelectWrap').classList.remove('visible');
+        document.getElementById('salesSelect').value = '';
+        document.getElementById('rentSelect').value  = '';
+        applyAllFilters();
+    }
+
+    /* ═══════════════════════════════════════════════
+       지역 구 선택 드롭다운
+    ═══════════════════════════════════════════════ */
     const DISTRICTS = {
         '서울':['서초구','성동구','광진구','동대문구','중랑구','성북구','노원구','은평구','마포구','양천구','강서구','영등포구','동작구','관악구'],
         '부산':['서구','영도구','남구','해운대구','금정구','수영구','사상구','기장군'],
@@ -384,272 +532,226 @@
         '강원':['춘천시'],
     };
 
-    function onCityChange(){
-        const city=document.getElementById('regionCity').value;
-        const wrap=document.getElementById('subSelectWrap');
-        const sel=document.getElementById('regionDistrict');
-        sel.innerHTML='<option value="">전체 (시/도만 적용)</option>';
-        if(city&&DISTRICTS[city]){
-            DISTRICTS[city].forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;sel.appendChild(o)});
+    function onCityChange() {
+        const city = document.getElementById('regionCity').value;
+        const wrap = document.getElementById('subSelectWrap');
+        const sel  = document.getElementById('regionDistrict');
+        sel.innerHTML = '<option value="">전체 (시/도만 적용)</option>';
+        if (city && DISTRICTS[city]) {
+            DISTRICTS[city].forEach(d => {
+                const o = document.createElement('option');
+                o.value = d; o.textContent = d; sel.appendChild(o);
+            });
             wrap.classList.add('visible');
-        } else wrap.classList.remove('visible');
-    }
-
-    function getRegionValue(){
-        return document.getElementById('regionDistrict').value||document.getElementById('regionCity').value||'';
-    }
-
-    function resetFilters(){
-        document.getElementById('ageInput').value='';
-        document.getElementById('incomeSelect').value='';
-        document.getElementById('regionCity').value='';
-        document.getElementById('regionDistrict').innerHTML='<option value="">전체 (시/도만 적용)</option>';
-        document.getElementById('subSelectWrap').classList.remove('visible');
-        document.getElementById('salesSelect').value='';
-        document.getElementById('rentSelect').value='';
-    }
-
-    window.onload=async ()=>{
-        const p=new URLSearchParams(location.search);
-        if(p.get('id')) {
-            try {
-                const data = await fetch(API).then(r=>r.json());
-                allData = data;
-                const card = data.find(w => w.id == p.get('id'));
-                if(card) {
-                    displayData(data);
-                    setTimeout(() => openModal(card), 300);
-                    return;
-                }
-            } catch(e) {
-                console.error(e);
-            }
-        }
-
-        if(p.toString() && !p.get('id')){
-            if(p.get('age'))   document.getElementById('ageInput').value=p.get('age');
-            if(p.get('income'))document.getElementById('incomeSelect').value=p.get('income');
-            if(p.get('region')){
-                const r=p.get('region');
-                const cityEl=document.getElementById('regionCity');
-                for(const opt of cityEl.options){ if(r===opt.value){cityEl.value=r;break} }
-                if(!cityEl.value){
-                    for(const [city,dists] of Object.entries(DISTRICTS)){
-                        if(dists.includes(r)){cityEl.value=city;onCityChange();document.getElementById('regionDistrict').value=r;break}
-                    }
-                }
-            }
-            if(p.get('sales'))document.getElementById('salesSelect').value=p.get('sales');
-            if(p.get('rent')) document.getElementById('rentSelect').value=p.get('rent');
-            currentParams=p.toString();
-            document.getElementById('shareBtn').style.display='flex';
-            applyCustomFilter();
         } else {
-            loadAll(document.querySelector('.tab-btn.active'));
+            wrap.classList.remove('visible');
         }
+    }
+
+    /* ═══════════════════════════════════════════════
+       URL 공유
+    ═══════════════════════════════════════════════ */
+    function shareResults() {
+        const url = currentParams
+            ? `${location.origin}${location.pathname}?${currentParams}`
+            : location.href;
+        navigator.clipboard.writeText(url)
+            .then(() => showToast('링크가 복사됐어요!'))
+            .catch(() => prompt('아래 링크를 복사하세요:', url));
+    }
+
+    function shareCard(cardId) {
+        const url = `${location.origin}${location.pathname}?id=${cardId}`;
+        navigator.clipboard.writeText(url)
+            .then(() => showToast('카드 링크가 복사됐어요!'))
+            .catch(() => prompt('아래 링크를 복사하세요:', url));
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    /* ═══════════════════════════════════════════════
+       페이지 초기 로드
+    ═══════════════════════════════════════════════ */
+    window.onload = async () => {
+        await ensureData();
+        const p = new URLSearchParams(location.search);
+
+        // ?id=X 로 직접 접근 시 해당 카드 모달 열기
+        if (p.get('id')) {
+            const card = allData.find(w => w.id == p.get('id'));
+            if (card) {
+                displayData(allData);
+                setTimeout(() => openModal(card), 300);
+                return;
+            }
+        }
+
+        // 필터 파라미터로 접근 시 복원
+        if (p.toString() && !p.get('id')) {
+            if (p.get('age'))      document.getElementById('ageInput').value    = p.get('age');
+            if (p.get('income'))   document.getElementById('incomeSelect').value = p.get('income');
+            if (p.get('city')) {
+                const cityEl = document.getElementById('regionCity');
+                cityEl.value = p.get('city');
+                onCityChange();
+                if (p.get('district')) {
+                    document.getElementById('regionDistrict').value = p.get('district');
+                }
+            }
+            if (p.get('sales'))    document.getElementById('salesSelect').value = p.get('sales');
+            if (p.get('rent'))     document.getElementById('rentSelect').value  = p.get('rent');
+            currentParams = p.toString();
+            document.getElementById('shareBtn').style.display = 'flex';
+        }
+
+        applyAllFilters();
     };
 
-    function handleKeyPress(e){if(e.key==='Enter')searchByTitle()}
+    /* ═══════════════════════════════════════════════
+       스크롤 탑 버튼
+    ═══════════════════════════════════════════════ */
+    window.addEventListener('scroll', () => {
+        const btn = document.getElementById('scrollTop');
+        btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
+    });
 
-    function setActive(btn){
-        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-        if(btn)btn.classList.add('active');
-    }
+    /* ═══════════════════════════════════════════════
+       렌더링
+    ═══════════════════════════════════════════════ */
+    function displayData(list) {
+        const container = document.getElementById('welfareList');
+        const countEl   = document.getElementById('resultCount');
+        container.innerHTML = '';
+        countEl.innerHTML   = `검색 결과 <strong>${list.length}건</strong>`;
 
-    async function loadAll(btn){
-        setActive(btn);
-        try{
-            const data = await fetch(API).then(r=>r.json());
-            allData = data;
-            displayData(data);
-        }
-        catch{showError()}
-    }
-
-    async function searchByTitle(){
-        const title=document.getElementById('searchInput').value.trim();
-        if(!title){alert('검색어를 입력하세요.');return}
-        try{
-            const data = await fetch(`${API}/search?title=${encodeURIComponent(title)}`).then(r=>r.json());
-            allData = data;
-            displayData(data);
-        }
-        catch{showError()}
-    }
-
-    async function searchByKeyword(keyword,btn){
-        setActive(btn);
-        try{
-            const data = await fetch(`${API}/keyword?keyword=${encodeURIComponent(keyword)}`).then(r=>r.json());
-            allData = data;
-            displayData(data);
-        }
-        catch{showError()}
-    }
-
-    async function applyCustomFilter(){
-        const params=new URLSearchParams();
-        const age=document.getElementById('ageInput').value;
-        const income=document.getElementById('incomeSelect').value;
-        const region=getRegionValue();
-        const sales=document.getElementById('salesSelect').value;
-        const rent=document.getElementById('rentSelect').value;
-        if(age)params.append('age',age);
-        if(income)params.append('income',income);
-        if(region)params.append('region',region);
-        if(sales)params.append('sales',sales);
-        if(rent)params.append('rent',rent);
-        try{
-            const res=await fetch(`${API}/filter?${params}`);
-            if(!res.ok)throw new Error();
-            const data = await res.json();
-            allData = data;
-            currentParams=params.toString();
-            history.pushState({},'','?'+currentParams);
-            document.getElementById('shareBtn').style.display='flex';
-            displayData(data);
-        }catch{showError()}
-    }
-
-    function displayData(list){
-        const container=document.getElementById('welfareList');
-        const countEl=document.getElementById('resultCount');
-        const statEl=document.getElementById('statTotal');
-        container.innerHTML='';
-        countEl.innerHTML=`검색 결과 <strong>${list.length}건</strong>`;
-        if(statEl.textContent==='—')statEl.textContent=list.length;
-
-        if(!list.length){
-            container.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><p>검색 결과가 없습니다.</p></div>`;
+        if (!list.length) {
+            container.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><p>검색 결과가 없습니다.</p></div>`;
             return;
         }
 
-        list.forEach((w,i)=>{
-            const card=document.createElement('div');
-            card.className='card';
-            card.style.animationDelay=`${Math.min(i*0.04,0.4)}s`;
-            card.onclick=()=>openModal(w);
+        list.forEach((w, i) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.animationDelay = `${Math.min(i * 0.04, 0.4)}s`;
+            card.onclick = () => openModal(w);
 
-            const title=document.createElement('div');
-            title.className='card-title';
-            title.textContent=w.title||'제목 없음';
-
-            const purpose=document.createElement('div');
-            purpose.className='card-purpose';
-            purpose.textContent=w.purpose||'설명 없음';
-
-            const agency=document.createElement('div');
-            agency.className='card-agency';
-            agency.innerHTML=`<div class="agency-dot"></div>`;
-            agency.appendChild(document.createTextNode(w.agency||'기관 정보 없음'));
-
-            card.innerHTML=`
-      <div class="card-tags">
-        <span class="tag tag-region">${w.region||'전국'}</span>
-        <span class="tag tag-keyword">${w.keyword||'기타'}</span>
-      </div>`;
-            card.appendChild(title);
-            card.innerHTML+=`<div class="card-divider"></div>`;
-            card.appendChild(purpose);
-            if(w.submitLink && w.submitLink.trim() !== '.') {
-                const badge=document.createElement('span');
-                badge.className='card-doc-badge';
-                badge.textContent='📎 서류있음';
-                const tagsEl=card.querySelector('.card-tags');
-                if(tagsEl) tagsEl.appendChild(badge);
-            }
-            const footer=document.createElement('div');
-            footer.className='card-footer';
-            footer.appendChild(agency);
-            footer.innerHTML+=`<div class="card-more">자세히<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="var(--lime)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
-            card.appendChild(footer);
+            card.innerHTML = `
+            <div class="card-tags">
+                <span class="tag tag-region">${w.region || '전국'}</span>
+                <span class="tag tag-keyword">${w.keyword || '기타'}</span>
+                ${w.submitLink && w.submitLink.trim() !== '.' ? '<span class="card-doc-badge">📎 서류있음</span>' : ''}
+            </div>
+            <div class="card-title">${w.title || '제목 없음'}</div>
+            <div class="card-divider"></div>
+            <div class="card-purpose">${w.purpose || '설명 없음'}</div>
+            <div class="card-footer">
+                <div class="card-agency"><div class="agency-dot"></div>${w.agency || '기관 정보 없음'}</div>
+                <div class="card-more">자세히<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="var(--lime)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg></div>
+            </div>`;
             container.appendChild(card);
         });
     }
 
-    function checkAndGo(url) {
-        if (!url) return;
-        window.open(url, '_blank');
+    /* ═══════════════════════════════════════════════
+       모달
+    ═══════════════════════════════════════════════ */
+    function parseDocLinks(raw) {
+        if (!raw || raw.trim() === '.') return [];
+        const items   = [];
+        const pattern = /([^:\n]+?):\s*(https?:\/\/[^\s,)]+)/g;
+        let match;
+        while ((match = pattern.exec(raw)) !== null) {
+            const name = match[1].replace(/^[\s,]+|[\s,]+$/g, '').trim();
+            const url  = match[2].trim();
+            if (name && url) items.push({ name, url });
+        }
+        if (!items.length) {
+            (raw.match(/https?:\/\/[^\s,\)]+/g) || []).forEach((url, i, arr) =>
+                items.push({ name: `신청 링크${arr.length > 1 ? ' ' + (i+1) : ''}`, url }));
+        }
+        return items;
     }
 
-    function openModal(w){
-        document.getElementById('modalTags').innerHTML=`
-    <span class="tag tag-region">${w.region||'전국'}</span>
-    <span class="tag tag-keyword">${w.keyword||'기타'}</span>`;
-        document.getElementById('modalTitle').textContent=w.title||'제목 없음';
+    function checkAndGo(url) { if (url) window.open(url, '_blank'); }
 
-        const purposeText = (w.purpose || '설명 없음')
-            .replace(/\s*-\s*/g, '<br>- ');
-        document.getElementById('modalPurpose').innerHTML = purposeText;
+    function openModal(w) {
+        document.getElementById('modalTags').innerHTML =
+            `<span class="tag tag-region">${w.region||'전국'}</span>
+             <span class="tag tag-keyword">${w.keyword||'기타'}</span>`;
+        document.getElementById('modalTitle').textContent = w.title || '제목 없음';
+        document.getElementById('modalPurpose').innerHTML =
+            (w.purpose || '설명 없음').replace(/\s*-\s*/g, '<br>- ');
 
-        const metaRows=[
-            ['기관',w.agency],
-            ['기한',w.region],
-            ['소득',w.income],
-            ['나이',w.age ? w.age.replace(/,/g, '~') : '']
-        ].filter(([,v])=>v&&v!=='.'&&v.trim()!=='');
+        const metaRows = [
+            ['기관', w.agency],
+            ['기한', w.region],
+            ['소득', w.income],
+            ['나이', w.age ? w.age.replace(/,/g, '~') : '']
+        ].filter(([, v]) => v && v !== '.' && v.trim() !== '');
 
-        document.getElementById('modalMeta').innerHTML=metaRows.map(([k,v])=>
-            `<div class="meta-row"><span class="meta-key">${k}</span><span class="meta-val">${v}</span></div>`
-        ).join('');
+        document.getElementById('modalMeta').innerHTML = metaRows
+            .map(([k, v]) => `<div class="meta-row"><span class="meta-key">${k}</span><span class="meta-val">${v}</span></div>`)
+            .join('');
 
         const docItems = parseDocLinks(w.submitLink);
-        let docsHtml = '';
-        if (docItems.length) {
-            docsHtml = `<div>
-      <div class="modal-section-label">제출 서류</div>
-      <div class="doc-links">
-        ${docItems.map(d=>`<a href="${d.url}" target="_blank" class="doc-link">📄 ${d.name}</a>`).join('')}
-      </div>
-    </div>`;
-        }
-        document.getElementById('modalDocs').innerHTML=docsHtml;
+        document.getElementById('modalDocs').innerHTML = docItems.length
+            ? `<div><div class="modal-section-label">제출 서류</div><div class="doc-links">
+               ${docItems.map(d => `<a href="${d.url}" target="_blank" class="doc-link">📄 ${d.name}</a>`).join('')}
+               </div></div>`
+            : '';
 
         let actionsHtml = '';
-
         if (w.infoUrl) {
             actionsHtml += `<button onclick="checkAndGo('${w.infoUrl}')" class="modal-btn modal-btn-primary">상세보기</button>`;
         }
-
         if (w.siteLink && w.siteLink.trim() !== '.') {
-            const isURL = w.siteLink.startsWith('http://') || w.siteLink.startsWith('https://');
-            const deadline = w.deadline ? w.deadline.trim() : '';
-            const isExpired = deadline === '기간종료' || deadline === '선착순마감';
-
+            const isURL    = w.siteLink.startsWith('http');
+            const deadline = (w.deadline || '').trim();
+            const expired  = deadline === '기간종료' || deadline === '선착순마감';
             if (isURL) {
-                if (isExpired) {
-                    actionsHtml += `<button onclick="alert('⚠️ ${deadline}\\n현재 신청이 불가능한 정책입니다.')" class="modal-btn modal-btn-ghost" style="opacity:0.5;cursor:not-allowed;">신청 사이트 (${deadline})</button>`;
-                } else {
-                    actionsHtml += `<button onclick="checkAndGo('${w.siteLink}')" class="modal-btn modal-btn-ghost">신청 사이트</button>`;
-                }
+                actionsHtml += expired
+                    ? `<button onclick="alert('⚠️ ${deadline}\\n현재 신청이 불가능한 정책입니다.')" class="modal-btn modal-btn-ghost" style="opacity:.5;cursor:not-allowed;">신청 사이트 (${deadline})</button>`
+                    : `<button onclick="checkAndGo('${w.siteLink}')" class="modal-btn modal-btn-ghost">신청 사이트</button>`;
             } else {
                 actionsHtml += `<div class="modal-text-info">📍 ${w.siteLink}</div>`;
             }
         }
-
         actionsHtml += `<button onclick="shareCard(${w.id})" class="modal-btn modal-btn-ghost">🔗 카드 공유</button>`;
-
         document.getElementById('modalActions').innerHTML = actionsHtml;
 
-        document.body.style.overflow='hidden';
-        document.getElementById('modal').scrollTop=0;
-        requestAnimationFrame(()=>document.getElementById('modalBackdrop').classList.add('open'));
+        document.body.style.overflow = 'hidden';
+        document.getElementById('modal').scrollTop = 0;
+        requestAnimationFrame(() => document.getElementById('modalBackdrop').classList.add('open'));
     }
 
-    function closeModal(){
+    function closeModal() {
         document.getElementById('modalBackdrop').classList.remove('open');
-        document.body.style.overflow='';
+        document.body.style.overflow = '';
     }
 
-    function handleBackdropClick(e){
-        if(e.target===document.getElementById('modalBackdrop'))closeModal();
+    function handleBackdropClick(e) {
+        if (e.target === document.getElementById('modalBackdrop')) closeModal();
     }
 
-    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-    function showError(){
-        document.getElementById('welfareList').innerHTML=
+    /* ═══════════════════════════════════════════════
+       기타 유틸
+    ═══════════════════════════════════════════════ */
+    function showError() {
+        document.getElementById('welfareList').innerHTML =
             `<div class="empty"><div class="empty-icon">⚠️</div><p>데이터를 불러오지 못했습니다.</p></div>`;
+    }
+
+    function changeFontSize(size) {
+        document.body.style.zoom = size === '14' ? 0.85 : size === '18' ? 1.15 : 1;
     }
 </script>
 </body>

@@ -213,7 +213,7 @@
         <div class="filter-card">
             <div class="filter-head">
                 <span class="filter-head-title">필터</span>
-                <button class="filter-reset" onclick="resetFilters()">초기화</button>
+                <button class="filter-reset" onclick="resetFiltersAndApply()">초기화</button>
             </div>
             <div class="filter-body">
                 <div class="fg">
@@ -346,6 +346,28 @@
     ═══════════════════════════════════════════════ */
     function applyAllFilters() {
         let list = [...allData];
+
+        /* ── URL 파라미터 항상 최신 상태로 동기화 (탭·검색창·사이드바 전부 포함) ── */
+        const _params = new URLSearchParams();
+        if (activeTitle)   _params.append('title',    activeTitle);
+        if (activeKeyword) _params.append('keyword',  activeKeyword);
+        const _age      = document.getElementById('ageInput').value;
+        const _income   = document.getElementById('incomeSelect').value;
+        const _city     = document.getElementById('regionCity').value;
+        const _district = document.getElementById('regionDistrict').value;
+        const _sales    = document.getElementById('salesSelect').value;
+        const _rent     = document.getElementById('rentSelect').value;
+        if (_age)      _params.append('age',      _age);
+        if (_income)   _params.append('income',   _income);
+        if (_city)     _params.append('city',     _city);
+        if (_district) _params.append('district', _district);
+        if (_sales)    _params.append('sales',    _sales);
+        if (_rent)     _params.append('rent',     _rent);
+        currentParams = _params.toString();
+        const shareBtn = document.getElementById('shareBtn');
+        shareBtn.style.display = currentParams ? 'flex' : 'none';
+        if (currentParams) history.replaceState({}, '', '?' + currentParams);
+        else history.replaceState({}, '', location.pathname);
 
         /* 1) 검색창 제목 필터 */
         if (activeTitle) {
@@ -485,29 +507,10 @@
     /* 사이드바 필터 적용 → 복합 적용 */
     async function applyCustomFilter() {
         await ensureData();
-        // URL 공유용 파라미터 구성
-        const params  = new URLSearchParams();
-        const age     = document.getElementById('ageInput').value;
-        const income  = document.getElementById('incomeSelect').value;
-        const city    = document.getElementById('regionCity').value;
-        const district= document.getElementById('regionDistrict').value;
-        const sales   = document.getElementById('salesSelect').value;
-        const rent    = document.getElementById('rentSelect').value;
-        if (age)      params.append('age',      age);
-        if (income)   params.append('income',   income);
-        if (city)     params.append('city',     city);
-        if (district) params.append('district', district);
-        if (sales)    params.append('sales',    sales);
-        if (rent)     params.append('rent',     rent);
-        currentParams = params.toString();
-        if (currentParams) {
-            history.pushState({}, '', '?' + currentParams);
-            document.getElementById('shareBtn').style.display = 'flex';
-        }
         applyAllFilters();
     }
 
-    /* 필터 초기화 */
+    /* 필터 초기화 (사이드바 UI만 리셋, applyAllFilters 호출은 호출부에서) */
     function resetFilters() {
         document.getElementById('ageInput').value    = '';
         document.getElementById('incomeSelect').value = '';
@@ -516,6 +519,17 @@
         document.getElementById('subSelectWrap').classList.remove('visible');
         document.getElementById('salesSelect').value = '';
         document.getElementById('rentSelect').value  = '';
+    }
+
+    /* 필터 초기화 버튼 (UI + 재적용) */
+    function resetFiltersAndApply() {
+        activeKeyword = '';
+        activeTitle   = '';
+        document.getElementById('searchInput').value = '';
+        document.querySelectorAll('.tab-btn').forEach((b, i) => {
+            b.classList.toggle('active', i === 0); // 전체보기 탭으로
+        });
+        resetFilters();
         applyAllFilters();
     }
 
@@ -591,22 +605,29 @@
             }
         }
 
-        // 필터 파라미터로 접근 시 복원
+        // 필터 파라미터로 접근 시 복원 (탭 키워드·검색창 포함)
         if (p.toString() && !p.get('id')) {
+            if (p.get('title')) {
+                activeTitle = p.get('title');
+                document.getElementById('searchInput').value = activeTitle;
+            }
+            if (p.get('keyword')) {
+                activeKeyword = p.get('keyword');
+                // 해당 탭 버튼 active 처리
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    if (btn.textContent.trim() === activeKeyword) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                });
+            }
             if (p.get('age'))      document.getElementById('ageInput').value    = p.get('age');
             if (p.get('income'))   document.getElementById('incomeSelect').value = p.get('income');
             if (p.get('city')) {
-                const cityEl = document.getElementById('regionCity');
-                cityEl.value = p.get('city');
+                document.getElementById('regionCity').value = p.get('city');
                 onCityChange();
-                if (p.get('district')) {
-                    document.getElementById('regionDistrict').value = p.get('district');
-                }
+                if (p.get('district')) document.getElementById('regionDistrict').value = p.get('district');
             }
             if (p.get('sales'))    document.getElementById('salesSelect').value = p.get('sales');
             if (p.get('rent'))     document.getElementById('rentSelect').value  = p.get('rent');
-            currentParams = p.toString();
-            document.getElementById('shareBtn').style.display = 'flex';
         }
 
         applyAllFilters();

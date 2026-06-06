@@ -27,7 +27,6 @@
             --radius:16px;
             --radius-sm:10px;
         }
-
         html{scroll-behavior:smooth}
         body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 
@@ -76,13 +75,10 @@
         .fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239a9690' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;background-color:var(--bg2)}
         .fg input:focus,.fg select:focus{border-color:var(--lime);background:var(--bg3)}
         .fg select option{background:var(--bg2)}
-
-
         .gender-toggle{display:flex;gap:6px}
         .gender-btn{flex:1;padding:9px 0;border-radius:var(--radius-sm);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border:1.5px solid var(--border);background:var(--bg2);color:var(--text3);transition:all .18s;letter-spacing:.02em}
         .gender-btn:hover{border-color:var(--lime);color:var(--lime)}
         .gender-btn.selected{background:var(--lime);border-color:var(--lime);color:#fff}
-
         .special-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
         .special-chip{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--bg2);cursor:pointer;transition:all .18s;user-select:none}
         .special-chip:hover{border-color:var(--lime)}
@@ -95,6 +91,8 @@
         .special-chip.checked .special-chip-check{background:var(--lime);border-color:var(--lime)}
         .special-chip-check::after{content:'✓';font-size:8px;color:#fff;display:none}
         .special-chip.checked .special-chip-check::after{display:block}
+
+        /* 활성 필터 태그 표시 */
         .active-filters{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
         .active-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--lime);background:rgba(45,122,58,0.07);border:1px solid rgba(45,122,58,0.2);border-radius:999px;padding:3px 10px}
         .active-tag button{background:none;border:none;color:var(--lime);cursor:pointer;font-size:12px;line-height:1;padding:0;margin-left:1px}
@@ -186,6 +184,7 @@
         ::-webkit-scrollbar-thumb:hover{background:var(--lime-dim)}
 
         @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
         @media(max-width:768px){
             .layout{grid-template-columns:1fr}
@@ -243,14 +242,10 @@
                 <button class="filter-reset" onclick="resetFiltersAndApply()">초기화</button>
             </div>
             <div class="filter-body">
-
-                <!-- 나이 -->
                 <div class="fg">
                     <label for="ageInput">나이</label>
                     <input type="number" id="ageInput" placeholder="예: 25">
                 </div>
-
-                <!-- 성별 (신규) -->
                 <div class="fg">
                     <label>성별</label>
                     <div class="gender-toggle">
@@ -261,18 +256,14 @@
                 </div>
 
                 <div class="filter-divider"></div>
-
-                <!-- 특이사항 (신규) -->
                 <div class="fg">
                     <label>특이사항</label>
                     <div class="special-grid" id="specialGrid">
-                        <!-- JS로 생성 -->
                     </div>
                 </div>
 
                 <div class="filter-divider"></div>
 
-                <!-- 소득 기준 -->
                 <div class="fg">
                     <label for="incomeSelect">소득 기준</label>
                     <select id="incomeSelect">
@@ -286,8 +277,6 @@
                         <option value="999">중위소득 180% 초과</option>
                     </select>
                 </div>
-
-                <!-- 지역 -->
                 <div class="fg">
                     <label for="regionCity">지역</label>
                     <select id="regionCity" onchange="onCityChange()">
@@ -307,7 +296,6 @@
                     </div>
                 </div>
 
-                <!-- 매출액 -->
                 <div class="fg">
                     <label for="salesSelect">매출액</label>
                     <select id="salesSelect">
@@ -319,7 +307,6 @@
                     </select>
                 </div>
 
-                <!-- 임차료 -->
                 <div class="fg">
                     <label for="rentSelect">임차료</label>
                     <select id="rentSelect">
@@ -345,7 +332,6 @@
             <button class="tab-btn" onclick="selectKeyword('금융', this)">금융</button>
             <button class="tab-btn" onclick="selectKeyword('문화/예술', this)">문화/예술</button>
         </div>
-        <!-- 활성 필터 태그 표시 -->
         <div class="active-filters" id="activeFilterTags"></div>
         <div class="result-head">
             <div class="result-count" id="resultCount"></div>
@@ -391,10 +377,9 @@
         { key: '농어촌',      label: '농어촌거주',  icon: '🌾', keywords: ['농어촌', '농촌', '어촌', '귀농', '귀촌'] },
     ];
 
+
     let activeSpecials = new Set();
-    let activeender = '';
-
-
+    let activeGender = '';
     const API = 'https://yhsmmh9021-production-7630.up.railway.app/api/welfares';
     let allData      = [];
     let activeKeyword = '';
@@ -416,7 +401,6 @@
             grid.appendChild(chip);
         });
     }
-
     function onSpecialChange(key, checked) {
         const chip = document.querySelector(`.special-chip[data-key="${key}"]`);
         if (checked) {
@@ -463,12 +447,18 @@
         applyAllFilters();
     }
     async function ensureData() {
-        if (allData.length > 0) return;
+        if (allData.length > 0) return true;
+        showLoading();
         try {
-            allData = await fetch(API).then(r => r.json());
+            const res = await fetch(API);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            allData = await res.json();
             document.getElementById('statTotal').textContent = allData.length;
+            return true;
         } catch(e) {
+            console.error('데이터 로드 실패:', e);
             showError();
+            return false;
         }
     }
     function applyAllFilters() {
@@ -495,7 +485,6 @@
         shareBtn.style.display = currentParams ? 'flex' : 'none';
         if (currentParams) history.replaceState({}, '', '?' + currentParams);
         else history.replaceState({}, '', location.pathname);
-
         if (activeTitle) {
             list = list.filter(w => w.title && w.title.includes(activeTitle));
         }
@@ -503,7 +492,6 @@
         if (activeKeyword) {
             list = list.filter(w => w.keyword && w.keyword.includes(activeKeyword));
         }
-
         const age = document.getElementById('ageInput').value;
         if (age) {
             list = list.filter(w => {
@@ -538,7 +526,6 @@
                 } catch(e) { return false; }
             });
         }
-
         const city     = document.getElementById('regionCity').value;
         const district = document.getElementById('regionDistrict').value;
         if (city || district) {
@@ -553,7 +540,6 @@
                 return true;
             });
         }
-
         const sales = document.getElementById('salesSelect').value;
         if (sales) {
             list = list.filter(w => {
@@ -562,8 +548,6 @@
                 return w.sales.includes(sales);
             });
         }
-
-
         const rent = document.getElementById('rentSelect').value;
         if (rent) {
             list = list.filter(w => {
@@ -587,24 +571,19 @@
                 return !oppositeOnly.some(kw => text.includes(kw));
             });
         }
-
         if (activeSpecials.size > 0) {
             list = list.filter(w => {
                 const text = `${w.title || ''} ${w.purpose || ''} ${w.special || ''} ${w.target || ''}`;
                 return [...activeSpecials].some(key => {
-
                     if (w.special && w.special.includes(key)) return true;
-
                     const spec = SPECIALS.find(s => s.key === key);
                     return spec ? spec.keywords.some(kw => text.includes(kw)) : false;
                 });
             });
         }
-
         renderActiveFilterTags();
         displayData(list);
     }
-
     function handleKeyPress(e) { if (e.key === 'Enter') searchByTitle(); }
 
     function setActive(btn) {
@@ -649,7 +628,7 @@
         document.getElementById('subSelectWrap').classList.remove('visible');
         document.getElementById('salesSelect').value = '';
         document.getElementById('rentSelect').value  = '';
-         activeGender = '';
+        activeGender = '';
         document.querySelectorAll('.gender-btn').forEach(btn => btn.classList.remove('selected'));
         activeSpecials.clear();
         document.querySelectorAll('.special-chip').forEach(chip => {
@@ -658,7 +637,7 @@
         });
     }
 
-    function resetFiltersAndApply() {
+    async function resetFiltersAndApply() {
         activeKeyword = '';
         activeTitle   = '';
         document.getElementById('searchInput').value = '';
@@ -666,7 +645,8 @@
             b.classList.toggle('active', i === 0);
         });
         resetFilters();
-        applyAllFilters();
+        const ok = await ensureData();
+        if (ok) applyAllFilters();
     }
 
     const DISTRICTS = {
@@ -716,12 +696,13 @@
         t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 2200);
     }
-
     window.onload = async () => {
         initSpecialChips();
         document.getElementById('genderAll').classList.add('selected');
 
-        await ensureData();
+        const ok = await ensureData();
+        if (!ok) return;  // fetch 실패 시 더 이상 진행하지 않음
+
         const p = new URLSearchParams(location.search);
 
         if (p.get('id')) {
@@ -745,9 +726,7 @@
                     else btn.classList.remove('active');
                 });
             }
-            if (p.get('gender')) {
-                setGender(p.get('gender'));
-            }
+            if (p.get('gender')) setGender(p.get('gender'));
             if (p.get('specials')) {
                 p.get('specials').split(',').forEach(key => {
                     activeSpecials.add(key);
@@ -758,20 +737,19 @@
                     }
                 });
             }
-            if (p.get('age'))      document.getElementById('ageInput').value    = p.get('age');
-            if (p.get('income'))   document.getElementById('incomeSelect').value = p.get('income');
+            if (p.get('age'))      document.getElementById('ageInput').value     = p.get('age');
+            if (p.get('income'))   document.getElementById('incomeSelect').value  = p.get('income');
             if (p.get('city')) {
                 document.getElementById('regionCity').value = p.get('city');
                 onCityChange();
                 if (p.get('district')) document.getElementById('regionDistrict').value = p.get('district');
             }
-            if (p.get('sales'))    document.getElementById('salesSelect').value = p.get('sales');
-            if (p.get('rent'))     document.getElementById('rentSelect').value  = p.get('rent');
+            if (p.get('sales'))    document.getElementById('salesSelect').value  = p.get('sales');
+            if (p.get('rent'))     document.getElementById('rentSelect').value   = p.get('rent');
         }
 
         applyAllFilters();
     };
-
     window.addEventListener('scroll', () => {
         const btn = document.getElementById('scrollTop');
         btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
@@ -793,10 +771,11 @@
             card.style.animationDelay = `${Math.min(i * 0.04, 0.4)}s`;
             card.onclick = () => openModal(w);
 
+            // 성별 태그 (있을 때만)
             const genderTagHtml = (w.gender && w.gender !== '.' && w.gender !== '전체')
                 ? `<span class="tag tag-gender">${w.gender}</span>`
                 : '';
-
+            // 특이사항 태그 (있을 때만)
             const specialTagHtml = (w.special && w.special !== '.')
                 ? `<span class="tag tag-special">${w.special}</span>`
                 : '';
@@ -821,6 +800,7 @@
             container.appendChild(card);
         });
     }
+
     function parseDocLinks(raw) {
         if (!raw || raw.trim() === '.') return [];
         const items   = [];
@@ -909,9 +889,15 @@
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
+    function showLoading() {
+        document.getElementById('welfareList').innerHTML =
+            `<div class="empty"><div class="empty-icon" style="animation:spin 1s linear infinite;display:inline-block">⏳</div><p>정책 데이터를 불러오는 중...</p></div>`;
+        document.getElementById('resultCount').innerHTML = '';
+    }
+
     function showError() {
         document.getElementById('welfareList').innerHTML =
-            `<div class="empty"><div class="empty-icon">⚠️</div><p>데이터를 불러오지 못했습니다.</p></div>`;
+            `<div class="empty"><div class="empty-icon">⚠️</div><p>데이터를 불러오지 못했습니다.<br><small style="font-size:12px;margin-top:8px;display:block">잠시 후 초기화 버튼을 눌러 다시 시도해 주세요.</small></p></div>`;
     }
 
     function changeFontSize(size) {

@@ -77,6 +77,28 @@
         .fg input:focus,.fg select:focus{border-color:var(--lime);background:var(--bg3)}
         .fg select option{background:var(--bg2)}
 
+
+        .gender-toggle{display:flex;gap:6px}
+        .gender-btn{flex:1;padding:9px 0;border-radius:var(--radius-sm);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border:1.5px solid var(--border);background:var(--bg2);color:var(--text3);transition:all .18s;letter-spacing:.02em}
+        .gender-btn:hover{border-color:var(--lime);color:var(--lime)}
+        .gender-btn.selected{background:var(--lime);border-color:var(--lime);color:#fff}
+
+        .special-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+        .special-chip{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--bg2);cursor:pointer;transition:all .18s;user-select:none}
+        .special-chip:hover{border-color:var(--lime)}
+        .special-chip.checked{background:rgba(45,122,58,0.07);border-color:var(--lime)}
+        .special-chip input[type="checkbox"]{display:none}
+        .special-chip-icon{font-size:14px;line-height:1;flex-shrink:0}
+        .special-chip-label{font-size:11px;font-weight:700;color:var(--text2);line-height:1.2}
+        .special-chip.checked .special-chip-label{color:var(--lime)}
+        .special-chip-check{margin-left:auto;width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;transition:all .18s;display:flex;align-items:center;justify-content:center}
+        .special-chip.checked .special-chip-check{background:var(--lime);border-color:var(--lime)}
+        .special-chip-check::after{content:'✓';font-size:8px;color:#fff;display:none}
+        .special-chip.checked .special-chip-check::after{display:block}
+        .active-filters{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
+        .active-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--lime);background:rgba(45,122,58,0.07);border:1px solid rgba(45,122,58,0.2);border-radius:999px;padding:3px 10px}
+        .active-tag button{background:none;border:none;color:var(--lime);cursor:pointer;font-size:12px;line-height:1;padding:0;margin-left:1px}
+
         .sub-select-wrap{margin-top:8px;overflow:hidden;max-height:0;opacity:0;transition:max-height .25s ease,opacity .2s ease}
         .sub-select-wrap.visible{max-height:60px;opacity:1}
 
@@ -105,6 +127,8 @@
         .tag{font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:.04em}
         .tag-region{background:rgba(91,63,191,0.08);color:var(--purple);border:1px solid rgba(91,63,191,0.15)}
         .tag-keyword{background:rgba(45,122,58,0.06);color:var(--lime);border:1px solid rgba(200,241,53,0.15)}
+        .tag-gender{background:rgba(224,48,48,0.06);color:var(--red);border:1px solid rgba(224,48,48,0.15)}
+        .tag-special{background:rgba(91,63,191,0.06);color:var(--purple);border:1px solid rgba(91,63,191,0.15)}
 
         .card-title{font-size:15px;font-weight:700;line-height:1.5;color:var(--text);letter-spacing:-.02em}
         .card-divider{height:1px;background:var(--border)}
@@ -139,7 +163,7 @@
         .modal-purpose{font-size:14px;line-height:1.85;color:var(--text2);white-space:pre-wrap}
         .modal-meta{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px;display:flex;flex-direction:column;gap:12px}
         .meta-row{display:flex;gap:16px;font-size:13px;align-items:flex-start}
-        .meta-key{color:var(--text3);font-weight:700;width:48px;flex-shrink:0;font-size:11px;padding-top:1px;letter-spacing:.04em}
+        .meta-key{color:var(--text3);font-weight:700;width:56px;flex-shrink:0;font-size:11px;padding-top:1px;letter-spacing:.04em}
         .meta-val{color:var(--text2);line-height:1.5}
         .modal-actions{display:flex;gap:10px}
         .modal-btn{flex:1;text-align:center;padding:13px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;font-family:inherit;text-decoration:none;cursor:pointer;transition:all .15s;letter-spacing:-.01em}
@@ -169,10 +193,13 @@
             .stats-bar{gap:24px}
             .hero{padding:70px 20px 60px}
             .layout{padding:24px 20px 80px}
+            .special-grid{grid-template-columns:1fr 1fr}
         }
 
         .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
         .modal-text-info{font-size:13px;color:var(--text2);padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center;line-height:1.6}
+
+        .filter-divider{height:1px;background:var(--border);margin:4px 0}
     </style>
 </head>
 <body>
@@ -216,10 +243,36 @@
                 <button class="filter-reset" onclick="resetFiltersAndApply()">초기화</button>
             </div>
             <div class="filter-body">
+
+                <!-- 나이 -->
                 <div class="fg">
                     <label for="ageInput">나이</label>
                     <input type="number" id="ageInput" placeholder="예: 25">
                 </div>
+
+                <!-- 성별 (신규) -->
+                <div class="fg">
+                    <label>성별</label>
+                    <div class="gender-toggle">
+                        <button type="button" class="gender-btn" id="genderAll"   onclick="setGender('')"   data-val="">전체</button>
+                        <button type="button" class="gender-btn" id="genderMale"  onclick="setGender('남성')" data-val="남성">남성 ♂</button>
+                        <button type="button" class="gender-btn" id="genderFemale" onclick="setGender('여성')" data-val="여성">여성 ♀</button>
+                    </div>
+                </div>
+
+                <div class="filter-divider"></div>
+
+                <!-- 특이사항 (신규) -->
+                <div class="fg">
+                    <label>특이사항</label>
+                    <div class="special-grid" id="specialGrid">
+                        <!-- JS로 생성 -->
+                    </div>
+                </div>
+
+                <div class="filter-divider"></div>
+
+                <!-- 소득 기준 -->
                 <div class="fg">
                     <label for="incomeSelect">소득 기준</label>
                     <select id="incomeSelect">
@@ -233,6 +286,8 @@
                         <option value="999">중위소득 180% 초과</option>
                     </select>
                 </div>
+
+                <!-- 지역 -->
                 <div class="fg">
                     <label for="regionCity">지역</label>
                     <select id="regionCity" onchange="onCityChange()">
@@ -251,6 +306,8 @@
                         </select>
                     </div>
                 </div>
+
+                <!-- 매출액 -->
                 <div class="fg">
                     <label for="salesSelect">매출액</label>
                     <select id="salesSelect">
@@ -261,6 +318,8 @@
                         <option value="3억">3억 이상</option>
                     </select>
                 </div>
+
+                <!-- 임차료 -->
                 <div class="fg">
                     <label for="rentSelect">임차료</label>
                     <select id="rentSelect">
@@ -269,6 +328,7 @@
                         <option value="30">30만원 이상</option>
                     </select>
                 </div>
+
                 <button class="apply-btn" onclick="applyCustomFilter()">조건 적용하기</button>
             </div>
         </div>
@@ -285,6 +345,8 @@
             <button class="tab-btn" onclick="selectKeyword('금융', this)">금융</button>
             <button class="tab-btn" onclick="selectKeyword('문화/예술', this)">문화/예술</button>
         </div>
+        <!-- 활성 필터 태그 표시 -->
+        <div class="active-filters" id="activeFilterTags"></div>
         <div class="result-head">
             <div class="result-count" id="resultCount"></div>
             <button class="share-btn" id="shareBtn" style="display:none" onclick="shareResults()">🔗 결과 공유</button>
@@ -318,18 +380,88 @@
 <div class="toast" id="toast"></div>
 
 <script>
-    /* ═══════════════════════════════════════════════
-       상태 변수
-    ═══════════════════════════════════════════════ */
+    const SPECIALS = [
+        { key: '군복무',      label: '군복무',      icon: '🪖', keywords: ['군', '군복무', '제대', '전역', '군인', '병역'] },
+        { key: '장애',        label: '장애인',      icon: '♿', keywords: ['장애', '장애인'] },
+        { key: '한부모',      label: '한부모가정',  icon: '👩‍👦', keywords: ['한부모', '한부모가족', '편부', '편모'] },
+        { key: '다문화',      label: '다문화가정',  icon: '🌏', keywords: ['다문화', '다문화가족', '결혼이민'] },
+        { key: '북한이탈',    label: '북한이탈주민',icon: '🕊️', keywords: ['북한이탈', '탈북', '새터민'] },
+        { key: '저소득',      label: '저소득층',    icon: '💚', keywords: ['저소득', '기초생활', '차상위'] },
+        { key: '청소년부모',  label: '청소년부모',  icon: '👶', keywords: ['청소년부모', '미혼모', '미혼부', '영유아'] },
+        { key: '농어촌',      label: '농어촌거주',  icon: '🌾', keywords: ['농어촌', '농촌', '어촌', '귀농', '귀촌'] },
+    ];
+
+    let activeSpecials = new Set();
+    let activeender = '';
+
+
     const API = 'https://yhsmmh9021-production-7630.up.railway.app/api/welfares';
-    let allData      = [];   // 전체 데이터 캐시 (최초 1회만 fetch)
-    let activeKeyword = '';  // 현재 선택된 탭 키워드
-    let activeTitle   = '';  // 검색창 키워드
+    let allData      = [];
+    let activeKeyword = '';
+    let activeTitle   = '';
     let currentParams = null;
 
-    /* ═══════════════════════════════════════════════
-       데이터 로드 (캐싱)
-    ═══════════════════════════════════════════════ */
+    function initSpecialChips() {
+        const grid = document.getElementById('specialGrid');
+        grid.innerHTML = '';
+        SPECIALS.forEach(s => {
+            const chip = document.createElement('label');
+            chip.className = 'special-chip';
+            chip.dataset.key = s.key;
+            chip.innerHTML = `
+                <input type="checkbox" value="${s.key}" onchange="onSpecialChange('${s.key}', this.checked)">
+                <span class="special-chip-icon">${s.icon}</span>
+                <span class="special-chip-label">${s.label}</span>
+                <span class="special-chip-check"></span>`;
+            grid.appendChild(chip);
+        });
+    }
+
+    function onSpecialChange(key, checked) {
+        const chip = document.querySelector(`.special-chip[data-key="${key}"]`);
+        if (checked) {
+            activeSpecials.add(key);
+            chip && chip.classList.add('checked');
+        } else {
+            activeSpecials.delete(key);
+            chip && chip.classList.remove('checked');
+        }
+    }
+    function setGender(val) {
+        activeGender = val;
+        document.querySelectorAll('.gender-btn').forEach(btn => {
+            btn.classList.toggle('selected', btn.dataset.val === val);
+        });
+    }
+    function renderActiveFilterTags() {
+        const wrap = document.getElementById('activeFilterTags');
+        wrap.innerHTML = '';
+
+        if (activeGender) {
+            const t = document.createElement('span');
+            t.className = 'active-tag';
+            t.innerHTML = `${activeGender} <button onclick="setGender('');applyAllFilters()">✕</button>`;
+            wrap.appendChild(t);
+        }
+        activeSpecials.forEach(key => {
+            const s = SPECIALS.find(x => x.key === key);
+            if (!s) return;
+            const t = document.createElement('span');
+            t.className = 'active-tag';
+            t.innerHTML = `${s.icon} ${s.label} <button onclick="removeSpecial('${key}')">✕</button>`;
+            wrap.appendChild(t);
+        });
+    }
+
+    function removeSpecial(key) {
+        activeSpecials.delete(key);
+        const chip = document.querySelector(`.special-chip[data-key="${key}"]`);
+        if (chip) {
+            chip.classList.remove('checked');
+            chip.querySelector('input').checked = false;
+        }
+        applyAllFilters();
+    }
     async function ensureData() {
         if (allData.length > 0) return;
         try {
@@ -339,18 +471,13 @@
             showError();
         }
     }
-
-    /* ═══════════════════════════════════════════════
-       핵심: 모든 조건을 한 번에 클라이언트에서 적용
-       - 탭 키워드 + 검색창 키워드 + 사이드바 필터 복합 적용
-    ═══════════════════════════════════════════════ */
     function applyAllFilters() {
         let list = [...allData];
-
-        /* ── URL 파라미터 항상 최신 상태로 동기화 (탭·검색창·사이드바 전부 포함) ── */
         const _params = new URLSearchParams();
         if (activeTitle)   _params.append('title',    activeTitle);
         if (activeKeyword) _params.append('keyword',  activeKeyword);
+        if (activeGender)  _params.append('gender',   activeGender);
+        if (activeSpecials.size) _params.append('specials', [...activeSpecials].join(','));
         const _age      = document.getElementById('ageInput').value;
         const _income   = document.getElementById('incomeSelect').value;
         const _city     = document.getElementById('regionCity').value;
@@ -369,17 +496,14 @@
         if (currentParams) history.replaceState({}, '', '?' + currentParams);
         else history.replaceState({}, '', location.pathname);
 
-        /* 1) 검색창 제목 필터 */
         if (activeTitle) {
             list = list.filter(w => w.title && w.title.includes(activeTitle));
         }
 
-        /* 2) 탭 키워드 필터 */
         if (activeKeyword) {
             list = list.filter(w => w.keyword && w.keyword.includes(activeKeyword));
         }
 
-        /* 3) 나이 필터 */
         const age = document.getElementById('ageInput').value;
         if (age) {
             list = list.filter(w => {
@@ -402,8 +526,6 @@
                 return false;
             });
         }
-
-        /* 4) 소득 필터 */
         const income = document.getElementById('incomeSelect').value;
         if (income) {
             list = list.filter(w => {
@@ -417,34 +539,21 @@
             });
         }
 
-        /* 5) 지역 필터 ─ 핵심 수정: 시/도 + 구/군을 분리 매칭
-           예) 부산 서구 선택 시:
-             - area에 "부산" 포함 AND "서구" 포함인 경우만 통과
-             - "인천 서구"는 "부산" 없으므로 제외
-             - "대구 달서구"는 "부산" 없으므로 제외          */
         const city     = document.getElementById('regionCity').value;
         const district = document.getElementById('regionDistrict').value;
-
         if (city || district) {
             list = list.filter(w => {
                 if (!w.area) return false;
                 if (w.area === '.') return true;
-
                 if (city && district) {
-                    /* 시/도 + 구/군 둘 다 선택된 경우
-                       area에 city도 포함되고 district도 포함되어야 함
-                       단, district가 다른 도시에서도 존재하는 구 이름(서구, 남구 등)일 경우
-                       반드시 city도 함께 확인해서 교차 오염 방지 */
                     return w.area.includes(city) && w.area.includes(district);
                 } else if (city) {
-                    /* 시/도만 선택 */
                     return w.area.includes(city);
                 }
                 return true;
             });
         }
 
-        /* 6) 매출액 필터 */
         const sales = document.getElementById('salesSelect').value;
         if (sales) {
             list = list.filter(w => {
@@ -454,7 +563,7 @@
             });
         }
 
-        /* 7) 임차료 필터 */
+
         const rent = document.getElementById('rentSelect').value;
         if (rent) {
             list = list.filter(w => {
@@ -463,13 +572,39 @@
                 return w.rent.includes(rent);
             });
         }
+        if (activeGender) {
+            list = list.filter(w => {
+                if (w.gender) {
+                    if (w.gender === '전체' || w.gender === '' || w.gender === '.') return true;
+                    return w.gender.includes(activeGender);
+                }
+                const text = `${w.title || ''} ${w.purpose || ''}`;
+                const opposite = activeGender === '남성' ? '여성' : '남성';
+                const oppositeOnly = [
+                    `${opposite}만`, `${opposite}전용`, `${opposite} 전용`,
+                    `${opposite}에 한함`, `${opposite}에 한해`
+                ];
+                return !oppositeOnly.some(kw => text.includes(kw));
+            });
+        }
 
+        if (activeSpecials.size > 0) {
+            list = list.filter(w => {
+                const text = `${w.title || ''} ${w.purpose || ''} ${w.special || ''} ${w.target || ''}`;
+                return [...activeSpecials].some(key => {
+
+                    if (w.special && w.special.includes(key)) return true;
+
+                    const spec = SPECIALS.find(s => s.key === key);
+                    return spec ? spec.keywords.some(kw => text.includes(kw)) : false;
+                });
+            });
+        }
+
+        renderActiveFilterTags();
         displayData(list);
     }
 
-    /* ═══════════════════════════════════════════════
-       공개 인터랙션 함수들
-    ═══════════════════════════════════════════════ */
     function handleKeyPress(e) { if (e.key === 'Enter') searchByTitle(); }
 
     function setActive(btn) {
@@ -477,7 +612,6 @@
         if (btn) btn.classList.add('active');
     }
 
-    /* 전체보기 탭 */
     async function loadAll(btn) {
         setActive(btn);
         activeKeyword = '';
@@ -487,7 +621,6 @@
         applyAllFilters();
     }
 
-    /* 탭 키워드 선택 → 상태 저장 후 복합 적용 */
     async function selectKeyword(keyword, btn) {
         setActive(btn);
         activeKeyword = keyword;
@@ -495,7 +628,6 @@
         applyAllFilters();
     }
 
-    /* 검색창 검색 → 상태 저장 후 복합 적용 */
     async function searchByTitle() {
         const title = document.getElementById('searchInput').value.trim();
         if (!title) { alert('검색어를 입력하세요.'); return; }
@@ -504,13 +636,11 @@
         applyAllFilters();
     }
 
-    /* 사이드바 필터 적용 → 복합 적용 */
     async function applyCustomFilter() {
         await ensureData();
         applyAllFilters();
     }
 
-    /* 필터 초기화 (사이드바 UI만 리셋, applyAllFilters 호출은 호출부에서) */
     function resetFilters() {
         document.getElementById('ageInput').value    = '';
         document.getElementById('incomeSelect').value = '';
@@ -519,23 +649,26 @@
         document.getElementById('subSelectWrap').classList.remove('visible');
         document.getElementById('salesSelect').value = '';
         document.getElementById('rentSelect').value  = '';
+         activeGender = '';
+        document.querySelectorAll('.gender-btn').forEach(btn => btn.classList.remove('selected'));
+        activeSpecials.clear();
+        document.querySelectorAll('.special-chip').forEach(chip => {
+            chip.classList.remove('checked');
+            chip.querySelector('input').checked = false;
+        });
     }
 
-    /* 필터 초기화 버튼 (UI + 재적용) */
     function resetFiltersAndApply() {
         activeKeyword = '';
         activeTitle   = '';
         document.getElementById('searchInput').value = '';
         document.querySelectorAll('.tab-btn').forEach((b, i) => {
-            b.classList.toggle('active', i === 0); // 전체보기 탭으로
+            b.classList.toggle('active', i === 0);
         });
         resetFilters();
         applyAllFilters();
     }
 
-    /* ═══════════════════════════════════════════════
-       지역 구 선택 드롭다운
-    ═══════════════════════════════════════════════ */
     const DISTRICTS = {
         '서울':['서초구','성동구','광진구','동대문구','중랑구','성북구','노원구','은평구','마포구','양천구','강서구','영등포구','동작구','관악구'],
         '부산':['서구','영도구','남구','해운대구','금정구','수영구','사상구','기장군'],
@@ -561,10 +694,6 @@
             wrap.classList.remove('visible');
         }
     }
-
-    /* ═══════════════════════════════════════════════
-       URL 공유
-    ═══════════════════════════════════════════════ */
     function shareResults() {
         const url = currentParams
             ? `${location.origin}${location.pathname}?${currentParams}`
@@ -588,14 +717,13 @@
         setTimeout(() => t.classList.remove('show'), 2200);
     }
 
-    /* ═══════════════════════════════════════════════
-       페이지 초기 로드
-    ═══════════════════════════════════════════════ */
     window.onload = async () => {
+        initSpecialChips();
+        document.getElementById('genderAll').classList.add('selected');
+
         await ensureData();
         const p = new URLSearchParams(location.search);
 
-        // ?id=X 로 직접 접근 시 해당 카드 모달 열기
         if (p.get('id')) {
             const card = allData.find(w => w.id == p.get('id'));
             if (card) {
@@ -605,7 +733,6 @@
             }
         }
 
-        // 필터 파라미터로 접근 시 복원 (탭 키워드·검색창 포함)
         if (p.toString() && !p.get('id')) {
             if (p.get('title')) {
                 activeTitle = p.get('title');
@@ -613,10 +740,22 @@
             }
             if (p.get('keyword')) {
                 activeKeyword = p.get('keyword');
-                // 해당 탭 버튼 active 처리
                 document.querySelectorAll('.tab-btn').forEach(btn => {
                     if (btn.textContent.trim() === activeKeyword) btn.classList.add('active');
                     else btn.classList.remove('active');
+                });
+            }
+            if (p.get('gender')) {
+                setGender(p.get('gender'));
+            }
+            if (p.get('specials')) {
+                p.get('specials').split(',').forEach(key => {
+                    activeSpecials.add(key);
+                    const chip = document.querySelector(`.special-chip[data-key="${key}"]`);
+                    if (chip) {
+                        chip.classList.add('checked');
+                        chip.querySelector('input').checked = true;
+                    }
                 });
             }
             if (p.get('age'))      document.getElementById('ageInput').value    = p.get('age');
@@ -633,17 +772,10 @@
         applyAllFilters();
     };
 
-    /* ═══════════════════════════════════════════════
-       스크롤 탑 버튼
-    ═══════════════════════════════════════════════ */
     window.addEventListener('scroll', () => {
         const btn = document.getElementById('scrollTop');
         btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
     });
-
-    /* ═══════════════════════════════════════════════
-       렌더링
-    ═══════════════════════════════════════════════ */
     function displayData(list) {
         const container = document.getElementById('welfareList');
         const countEl   = document.getElementById('resultCount');
@@ -661,10 +793,20 @@
             card.style.animationDelay = `${Math.min(i * 0.04, 0.4)}s`;
             card.onclick = () => openModal(w);
 
+            const genderTagHtml = (w.gender && w.gender !== '.' && w.gender !== '전체')
+                ? `<span class="tag tag-gender">${w.gender}</span>`
+                : '';
+
+            const specialTagHtml = (w.special && w.special !== '.')
+                ? `<span class="tag tag-special">${w.special}</span>`
+                : '';
+
             card.innerHTML = `
             <div class="card-tags">
                 <span class="tag tag-region">${w.region || '전국'}</span>
                 <span class="tag tag-keyword">${w.keyword || '기타'}</span>
+                ${genderTagHtml}
+                ${specialTagHtml}
                 ${w.submitLink && w.submitLink.trim() !== '.' ? '<span class="card-doc-badge">📎 서류있음</span>' : ''}
             </div>
             <div class="card-title">${w.title || '제목 없음'}</div>
@@ -679,10 +821,6 @@
             container.appendChild(card);
         });
     }
-
-    /* ═══════════════════════════════════════════════
-       모달
-    ═══════════════════════════════════════════════ */
     function parseDocLinks(raw) {
         if (!raw || raw.trim() === '.') return [];
         const items   = [];
@@ -703,9 +841,15 @@
     function checkAndGo(url) { if (url) window.open(url, '_blank'); }
 
     function openModal(w) {
+        const genderTagHtml = (w.gender && w.gender !== '.' && w.gender !== '전체')
+            ? `<span class="tag tag-gender">${w.gender}</span>` : '';
+        const specialTagHtml = (w.special && w.special !== '.')
+            ? `<span class="tag tag-special">${w.special}</span>` : '';
+
         document.getElementById('modalTags').innerHTML =
             `<span class="tag tag-region">${w.region||'전국'}</span>
-             <span class="tag tag-keyword">${w.keyword||'기타'}</span>`;
+             <span class="tag tag-keyword">${w.keyword||'기타'}</span>
+             ${genderTagHtml}${specialTagHtml}`;
         document.getElementById('modalTitle').textContent = w.title || '제목 없음';
         document.getElementById('modalPurpose').innerHTML =
             (w.purpose || '설명 없음').replace(/\s*-\s*/g, '<br>- ');
@@ -714,7 +858,9 @@
             ['기관', w.agency],
             ['기한', w.region],
             ['소득', w.income],
-            ['나이', w.age ? w.age.replace(/,/g, '~') : '']
+            ['나이', w.age ? w.age.replace(/,/g, '~') : ''],
+            ['성별', w.gender && w.gender !== '.' ? w.gender : ''],
+            ['특이사항', w.special && w.special !== '.' ? w.special : ''],
         ].filter(([, v]) => v && v !== '.' && v.trim() !== '');
 
         document.getElementById('modalMeta').innerHTML = metaRows
@@ -763,9 +909,6 @@
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-    /* ═══════════════════════════════════════════════
-       기타 유틸
-    ═══════════════════════════════════════════════ */
     function showError() {
         document.getElementById('welfareList').innerHTML =
             `<div class="empty"><div class="empty-icon">⚠️</div><p>데이터를 불러오지 못했습니다.</p></div>`;

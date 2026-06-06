@@ -242,10 +242,10 @@
                     <label for="specialSelect">특이사항</label>
                     <select id="specialSelect">
                         <option value="">해당없음</option>
-                        <option value="군복무">군복무</option>
-                        <option value="장애">장애인</option>
-                        <option value="한부모">한부모가정</option>
-                        <option value="농어촌">농어촌거주</option>
+                        <option value="군복무">🪖 군복무</option>
+                        <option value="장애">♿ 장애인</option>
+                        <option value="한부모">👩‍👦 한부모가정</option>
+                        <option value="농어촌">🌾 농어촌거주</option>
                     </select>
                 </div>
 
@@ -319,7 +319,6 @@
             <button class="tab-btn" onclick="selectKeyword('금융', this)">금융</button>
             <button class="tab-btn" onclick="selectKeyword('문화/예술', this)">문화/예술</button>
         </div>
-        <div class="active-filters" id="activeFilterTags"></div>
         <div class="result-head">
             <div class="result-count" id="resultCount"></div>
             <button class="share-btn" id="shareBtn" style="display:none" onclick="shareResults()">🔗 결과 공유</button>
@@ -366,31 +365,6 @@
     let activeTitle   = '';
     let currentParams = null;
 
-    function renderActiveFilterTags() {
-        const wrap    = document.getElementById('activeFilterTags');
-        wrap.innerHTML = '';
-
-        const gender  = document.getElementById('genderSelect').value;
-        const special = document.getElementById('specialSelect').value;
-
-        if (gender) {
-            const t = document.createElement('span');
-            t.className = 'active-tag';
-            t.innerHTML = `${gender} <button onclick="document.getElementById('genderSelect').value='';applyAllFilters()">✕</button>`;
-            wrap.appendChild(t);
-        }
-
-        if (special) {
-            const s = SPECIALS.find(x => x.key === special);
-            if (s) {
-                const t = document.createElement('span');
-                t.className = 'active-tag';
-                t.innerHTML = `${s.icon} ${s.label} <button onclick="document.getElementById('specialSelect').value='';applyAllFilters()">✕</button>`;
-                wrap.appendChild(t);
-            }
-        }
-    }
-
     async function ensureData() {
         if (allData.length > 0) return true;
         showLoading();
@@ -422,8 +396,6 @@
 
         if (activeTitle)   _params.append('title',   activeTitle);
         if (activeKeyword) _params.append('keyword', activeKeyword);
-        if (gender)        _params.append('gender',  gender);
-        if (special)       _params.append('special', special);
         if (_age)          _params.append('age',     _age);
         if (_income)       _params.append('income',  _income);
         if (_city)         _params.append('city',    _city);
@@ -505,36 +477,11 @@
             });
         }
 
-        if (gender) {
-            list = list.filter(w => {
-                if (w.gender) {
-                    if (w.gender === '전체' || w.gender === '' || w.gender === '.') return true;
-                    return w.gender.includes(gender);
-                }
-                const text     = `${w.title || ''} ${w.purpose || ''}`;
-                const opposite = gender === '남성' ? '여성' : '남성';
-                const oppositeOnly = [
-                    `${opposite}만`, `${opposite}전용`, `${opposite} 전용`,
-                    `${opposite}에 한함`, `${opposite}에 한해`
-                ];
-                return !oppositeOnly.some(kw => text.includes(kw));
-            });
-        }
-
-        if (special) {
-            const spec = SPECIALS.find(s => s.key === special);
-            if (spec) {
-                list = list.filter(w => {
-                    const text = `${w.title || ''} ${w.purpose || ''} ${w.special || ''} ${w.target || ''}`;
-                    if (w.special && w.special.includes(special)) return true;
-                    return spec.keywords.some(kw => text.includes(kw));
-                });
-            }
-        }
-
         renderActiveFilterTags();
         displayData(list);
     }
+
+    function renderActiveFilterTags() {}
 
     function handleKeyPress(e) { if (e.key === 'Enter') searchByTitle(); }
 

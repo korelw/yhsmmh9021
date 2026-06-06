@@ -75,24 +75,7 @@
         .fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239a9690' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;background-color:var(--bg2)}
         .fg input:focus,.fg select:focus{border-color:var(--lime);background:var(--bg3)}
         .fg select option{background:var(--bg2)}
-        .gender-toggle{display:flex;gap:6px}
-        .gender-btn{flex:1;padding:9px 0;border-radius:var(--radius-sm);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border:1.5px solid var(--border);background:var(--bg2);color:var(--text3);transition:all .18s;letter-spacing:.02em}
-        .gender-btn:hover{border-color:var(--lime);color:var(--lime)}
-        .gender-btn.selected{background:var(--lime);border-color:var(--lime);color:#fff}
-        .special-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-        .special-chip{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--bg2);cursor:pointer;transition:all .18s;user-select:none}
-        .special-chip:hover{border-color:var(--lime)}
-        .special-chip.checked{background:rgba(45,122,58,0.07);border-color:var(--lime)}
-        .special-chip input[type="checkbox"]{display:none}
-        .special-chip-icon{font-size:14px;line-height:1;flex-shrink:0}
-        .special-chip-label{font-size:11px;font-weight:700;color:var(--text2);line-height:1.2}
-        .special-chip.checked .special-chip-label{color:var(--lime)}
-        .special-chip-check{margin-left:auto;width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;transition:all .18s;display:flex;align-items:center;justify-content:center}
-        .special-chip.checked .special-chip-check{background:var(--lime);border-color:var(--lime)}
-        .special-chip-check::after{content:'✓';font-size:8px;color:#fff;display:none}
-        .special-chip.checked .special-chip-check::after{display:block}
 
-        /* 활성 필터 태그 표시 */
         .active-filters{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
         .active-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--lime);background:rgba(45,122,58,0.07);border:1px solid rgba(45,122,58,0.2);border-radius:999px;padding:3px 10px}
         .active-tag button{background:none;border:none;color:var(--lime);cursor:pointer;font-size:12px;line-height:1;padding:0;margin-left:1px}
@@ -112,7 +95,6 @@
         .result-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
         .result-count{font-size:13px;color:var(--text3)}
         .result-count strong{color:var(--text);font-weight:700}
-        .result-sort{font-size:12px;color:var(--text3)}
 
         .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
 
@@ -192,12 +174,10 @@
             .stats-bar{gap:24px}
             .hero{padding:70px 20px 60px}
             .layout{padding:24px 20px 80px}
-            .special-grid{grid-template-columns:1fr 1fr}
         }
 
         .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
         .modal-text-info{font-size:13px;color:var(--text2);padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center;line-height:1.6}
-
         .filter-divider{height:1px;background:var(--border);margin:4px 0}
     </style>
 </head>
@@ -246,20 +226,27 @@
                     <label for="ageInput">나이</label>
                     <input type="number" id="ageInput" placeholder="예: 25">
                 </div>
+
                 <div class="fg">
-                    <label>성별</label>
-                    <div class="gender-toggle">
-                        <button type="button" class="gender-btn" id="genderAll"   onclick="setGender('')"   data-val="">전체</button>
-                        <button type="button" class="gender-btn" id="genderMale"  onclick="setGender('남성')" data-val="남성">남성 ♂</button>
-                        <button type="button" class="gender-btn" id="genderFemale" onclick="setGender('여성')" data-val="여성">여성 ♀</button>
-                    </div>
+                    <label for="genderSelect">성별</label>
+                    <select id="genderSelect">
+                        <option value="">전체</option>
+                        <option value="남성">남성</option>
+                        <option value="여성">여성</option>
+                    </select>
                 </div>
 
                 <div class="filter-divider"></div>
+
                 <div class="fg">
-                    <label>특이사항</label>
-                    <div class="special-grid" id="specialGrid">
-                    </div>
+                    <label for="specialSelect">특이사항</label>
+                    <select id="specialSelect">
+                        <option value="">해당없음</option>
+                        <option value="군복무">군복무</option>
+                        <option value="장애">장애인</option>
+                        <option value="한부모">한부모가정</option>
+                        <option value="농어촌">농어촌거주</option>
+                    </select>
                 </div>
 
                 <div class="filter-divider"></div>
@@ -367,79 +354,43 @@
 
 <script>
     const SPECIALS = [
-        { key: '군복무',      label: '군복무',      icon: '🪖', keywords: ['군', '군복무', '제대', '전역', '군인', '병역'] },
-        { key: '장애',        label: '장애인',      icon: '♿', keywords: ['장애', '장애인'] },
-        { key: '한부모',      label: '한부모가정',  icon: '👩‍👦', keywords: ['한부모', '한부모가족', '편부', '편모'] },
-        { key: '농어촌',      label: '농어촌거주',  icon: '🌾', keywords: ['농어촌', '농촌', '어촌', '귀농', '귀촌'] },
+        { key: '군복무',  label: '군복무',     icon: '🪖', keywords: ['군', '군복무', '제대', '전역', '군인', '병역'] },
+        { key: '장애',    label: '장애인',     icon: '♿', keywords: ['장애', '장애인'] },
+        { key: '한부모',  label: '한부모가정', icon: '👩‍👦', keywords: ['한부모', '한부모가족', '편부', '편모'] },
+        { key: '농어촌',  label: '농어촌거주', icon: '🌾', keywords: ['농어촌', '농촌', '어촌', '귀농', '귀촌'] },
     ];
-    let activeSpecials = new Set();
-    let activeGender = '';
+
     const API = 'https://yhsmmh9021-production-7630.up.railway.app/api/welfares';
     let allData      = [];
     let activeKeyword = '';
     let activeTitle   = '';
     let currentParams = null;
 
-    function initSpecialChips() {
-        const grid = document.getElementById('specialGrid');
-        grid.innerHTML = '';
-        SPECIALS.forEach(s => {
-            const chip = document.createElement('label');
-            chip.className = 'special-chip';
-            chip.dataset.key = s.key;
-            chip.innerHTML = `
-                <input type="checkbox" value="${s.key}" onchange="onSpecialChange('${s.key}', this.checked)">
-                <span class="special-chip-icon">${s.icon}</span>
-                <span class="special-chip-label">${s.label}</span>
-                <span class="special-chip-check"></span>`;
-            grid.appendChild(chip);
-        });
-    }
-    function onSpecialChange(key, checked) {
-        const chip = document.querySelector(`.special-chip[data-key="${key}"]`);
-        if (checked) {
-            activeSpecials.add(key);
-            chip && chip.classList.add('checked');
-        } else {
-            activeSpecials.delete(key);
-            chip && chip.classList.remove('checked');
-        }
-    }
-    function setGender(val) {
-        activeGender = val;
-        document.querySelectorAll('.gender-btn').forEach(btn => {
-            btn.classList.toggle('selected', btn.dataset.val === val);
-        });
-    }
     function renderActiveFilterTags() {
-        const wrap = document.getElementById('activeFilterTags');
+        const wrap    = document.getElementById('activeFilterTags');
         wrap.innerHTML = '';
 
-        if (activeGender) {
+        const gender  = document.getElementById('genderSelect').value;
+        const special = document.getElementById('specialSelect').value;
+
+        if (gender) {
             const t = document.createElement('span');
             t.className = 'active-tag';
-            t.innerHTML = `${activeGender} <button onclick="setGender('');applyAllFilters()">✕</button>`;
+            t.innerHTML = `${gender} <button onclick="document.getElementById('genderSelect').value='';applyAllFilters()">✕</button>`;
             wrap.appendChild(t);
         }
-        activeSpecials.forEach(key => {
-            const s = SPECIALS.find(x => x.key === key);
-            if (!s) return;
-            const t = document.createElement('span');
-            t.className = 'active-tag';
-            t.innerHTML = `${s.icon} ${s.label} <button onclick="removeSpecial('${key}')">✕</button>`;
-            wrap.appendChild(t);
-        });
+
+        if (special) {
+            const s = SPECIALS.find(x => x.key === special);
+            if (s) {
+                const t = document.createElement('span');
+                t.className = 'active-tag';
+                t.innerHTML = `${s.icon} ${s.label} <button onclick="document.getElementById('specialSelect').value='';applyAllFilters()">✕</button>`;
+                wrap.appendChild(t);
+            }
+        }
     }
 
-    function removeSpecial(key) {
-        activeSpecials.delete(key);
-        const chip = document.querySelector(`.special-chip[data-key="${key}"]`);
-        if (chip) {
-            chip.classList.remove('checked');
-            chip.querySelector('input').checked = false;
-        }
-        applyAllFilters();
-    }
     async function ensureData() {
         if (allData.length > 0) return true;
         showLoading();
@@ -455,30 +406,37 @@
             return false;
         }
     }
+
     function applyAllFilters() {
         let list = [...allData];
-        const _params = new URLSearchParams();
-        if (activeTitle)   _params.append('title',    activeTitle);
-        if (activeKeyword) _params.append('keyword',  activeKeyword);
-        if (activeGender)  _params.append('gender',   activeGender);
-        if (activeSpecials.size) _params.append('specials', [...activeSpecials].join(','));
+
+        const _params   = new URLSearchParams();
+        const gender    = document.getElementById('genderSelect').value;
+        const special   = document.getElementById('specialSelect').value;
         const _age      = document.getElementById('ageInput').value;
         const _income   = document.getElementById('incomeSelect').value;
         const _city     = document.getElementById('regionCity').value;
         const _district = document.getElementById('regionDistrict').value;
         const _sales    = document.getElementById('salesSelect').value;
         const _rent     = document.getElementById('rentSelect').value;
-        if (_age)      _params.append('age',      _age);
-        if (_income)   _params.append('income',   _income);
-        if (_city)     _params.append('city',     _city);
-        if (_district) _params.append('district', _district);
-        if (_sales)    _params.append('sales',    _sales);
-        if (_rent)     _params.append('rent',     _rent);
+
+        if (activeTitle)   _params.append('title',   activeTitle);
+        if (activeKeyword) _params.append('keyword', activeKeyword);
+        if (gender)        _params.append('gender',  gender);
+        if (special)       _params.append('special', special);
+        if (_age)          _params.append('age',     _age);
+        if (_income)       _params.append('income',  _income);
+        if (_city)         _params.append('city',    _city);
+        if (_district)     _params.append('district',_district);
+        if (_sales)        _params.append('sales',   _sales);
+        if (_rent)         _params.append('rent',    _rent);
+
         currentParams = _params.toString();
         const shareBtn = document.getElementById('shareBtn');
         shareBtn.style.display = currentParams ? 'flex' : 'none';
         if (currentParams) history.replaceState({}, '', '?' + currentParams);
         else history.replaceState({}, '', location.pathname);
+
         if (activeTitle) {
             list = list.filter(w => w.title && w.title.includes(activeTitle));
         }
@@ -486,12 +444,12 @@
         if (activeKeyword) {
             list = list.filter(w => w.keyword && w.keyword.includes(activeKeyword));
         }
-        const age = document.getElementById('ageInput').value;
-        if (age) {
+
+        if (_age) {
             list = list.filter(w => {
                 if (!w.age || w.age === '' || w.age === '.') return true;
                 try {
-                    const u = parseInt(age);
+                    const u = parseInt(_age);
                     const a = w.age.trim();
                     if (a.includes('~')) {
                         const [mn, mx] = a.split('~').map(s => parseInt(s.trim()));
@@ -508,56 +466,53 @@
                 return false;
             });
         }
-        const income = document.getElementById('incomeSelect').value;
-        if (income) {
+
+        if (_income) {
             list = list.filter(w => {
                 if (!w.income) return false;
                 if (w.income === '.') return true;
                 try {
-                    const u = parseInt(income);
+                    const u  = parseInt(_income);
                     const ms = w.income.match(/(\d+)%/g);
                     return ms ? ms.some(m => parseInt(m) >= u) : false;
                 } catch(e) { return false; }
             });
         }
-        const city     = document.getElementById('regionCity').value;
-        const district = document.getElementById('regionDistrict').value;
-        if (city || district) {
+
+        if (_city || _district) {
             list = list.filter(w => {
                 if (!w.area) return false;
                 if (w.area === '.') return true;
-                if (city && district) {
-                    return w.area.includes(city) && w.area.includes(district);
-                } else if (city) {
-                    return w.area.includes(city);
-                }
+                if (_city && _district) return w.area.includes(_city) && w.area.includes(_district);
+                if (_city) return w.area.includes(_city);
                 return true;
             });
         }
-        const sales = document.getElementById('salesSelect').value;
-        if (sales) {
+
+        if (_sales) {
             list = list.filter(w => {
                 if (!w.sales) return false;
                 if (w.sales === '.') return true;
-                return w.sales.includes(sales);
+                return w.sales.includes(_sales);
             });
         }
-        const rent = document.getElementById('rentSelect').value;
-        if (rent) {
+
+        if (_rent) {
             list = list.filter(w => {
                 if (!w.rent) return false;
                 if (w.rent === '.') return true;
-                return w.rent.includes(rent);
+                return w.rent.includes(_rent);
             });
         }
-        if (activeGender) {
+
+        if (gender) {
             list = list.filter(w => {
                 if (w.gender) {
                     if (w.gender === '전체' || w.gender === '' || w.gender === '.') return true;
-                    return w.gender.includes(activeGender);
+                    return w.gender.includes(gender);
                 }
-                const text = `${w.title || ''} ${w.purpose || ''}`;
-                const opposite = activeGender === '남성' ? '여성' : '남성';
+                const text     = `${w.title || ''} ${w.purpose || ''}`;
+                const opposite = gender === '남성' ? '여성' : '남성';
                 const oppositeOnly = [
                     `${opposite}만`, `${opposite}전용`, `${opposite} 전용`,
                     `${opposite}에 한함`, `${opposite}에 한해`
@@ -565,19 +520,22 @@
                 return !oppositeOnly.some(kw => text.includes(kw));
             });
         }
-        if (activeSpecials.size > 0) {
-            list = list.filter(w => {
-                const text = `${w.title || ''} ${w.purpose || ''} ${w.special || ''} ${w.target || ''}`;
-                return [...activeSpecials].some(key => {
-                    if (w.special && w.special.includes(key)) return true;
-                    const spec = SPECIALS.find(s => s.key === key);
-                    return spec ? spec.keywords.some(kw => text.includes(kw)) : false;
+
+        if (special) {
+            const spec = SPECIALS.find(s => s.key === special);
+            if (spec) {
+                list = list.filter(w => {
+                    const text = `${w.title || ''} ${w.purpose || ''} ${w.special || ''} ${w.target || ''}`;
+                    if (w.special && w.special.includes(special)) return true;
+                    return spec.keywords.some(kw => text.includes(kw));
                 });
-            });
+            }
         }
+
         renderActiveFilterTags();
         displayData(list);
     }
+
     function handleKeyPress(e) { if (e.key === 'Enter') searchByTitle(); }
 
     function setActive(btn) {
@@ -615,29 +573,22 @@
     }
 
     function resetFilters() {
-        document.getElementById('ageInput').value    = '';
-        document.getElementById('incomeSelect').value = '';
-        document.getElementById('regionCity').value  = '';
+        document.getElementById('ageInput').value      = '';
+        document.getElementById('genderSelect').value  = '';
+        document.getElementById('specialSelect').value = '';
+        document.getElementById('incomeSelect').value  = '';
+        document.getElementById('regionCity').value    = '';
         document.getElementById('regionDistrict').innerHTML = '<option value="">전체 (시/도만 적용)</option>';
         document.getElementById('subSelectWrap').classList.remove('visible');
-        document.getElementById('salesSelect').value = '';
-        document.getElementById('rentSelect').value  = '';
-        activeGender = '';
-        document.querySelectorAll('.gender-btn').forEach(btn => btn.classList.remove('selected'));
-        activeSpecials.clear();
-        document.querySelectorAll('.special-chip').forEach(chip => {
-            chip.classList.remove('checked');
-            chip.querySelector('input').checked = false;
-        });
+        document.getElementById('salesSelect').value   = '';
+        document.getElementById('rentSelect').value    = '';
     }
 
     async function resetFiltersAndApply() {
         activeKeyword = '';
         activeTitle   = '';
         document.getElementById('searchInput').value = '';
-        document.querySelectorAll('.tab-btn').forEach((b, i) => {
-            b.classList.toggle('active', i === 0);
-        });
+        document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
         resetFilters();
         const ok = await ensureData();
         if (ok) applyAllFilters();
@@ -668,6 +619,7 @@
             wrap.classList.remove('visible');
         }
     }
+
     function shareResults() {
         const url = currentParams
             ? `${location.origin}${location.pathname}?${currentParams}`
@@ -690,12 +642,10 @@
         t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 2200);
     }
-    window.onload = async () => {
-        initSpecialChips();
-        document.getElementById('genderAll').classList.add('selected');
 
+    window.onload = async () => {
         const ok = await ensureData();
-        if (!ok) return;  // fetch 실패 시 더 이상 진행하지 않음
+        if (!ok) return;
 
         const p = new URLSearchParams(location.search);
 
@@ -716,38 +666,30 @@
             if (p.get('keyword')) {
                 activeKeyword = p.get('keyword');
                 document.querySelectorAll('.tab-btn').forEach(btn => {
-                    if (btn.textContent.trim() === activeKeyword) btn.classList.add('active');
-                    else btn.classList.remove('active');
+                    btn.classList.toggle('active', btn.textContent.trim() === activeKeyword);
                 });
             }
-            if (p.get('gender')) setGender(p.get('gender'));
-            if (p.get('specials')) {
-                p.get('specials').split(',').forEach(key => {
-                    activeSpecials.add(key);
-                    const chip = document.querySelector(`.special-chip[data-key="${key}"]`);
-                    if (chip) {
-                        chip.classList.add('checked');
-                        chip.querySelector('input').checked = true;
-                    }
-                });
-            }
-            if (p.get('age'))      document.getElementById('ageInput').value     = p.get('age');
-            if (p.get('income'))   document.getElementById('incomeSelect').value  = p.get('income');
+            if (p.get('gender'))  document.getElementById('genderSelect').value  = p.get('gender');
+            if (p.get('special')) document.getElementById('specialSelect').value = p.get('special');
+            if (p.get('age'))     document.getElementById('ageInput').value      = p.get('age');
+            if (p.get('income'))  document.getElementById('incomeSelect').value  = p.get('income');
             if (p.get('city')) {
                 document.getElementById('regionCity').value = p.get('city');
                 onCityChange();
                 if (p.get('district')) document.getElementById('regionDistrict').value = p.get('district');
             }
-            if (p.get('sales'))    document.getElementById('salesSelect').value  = p.get('sales');
-            if (p.get('rent'))     document.getElementById('rentSelect').value   = p.get('rent');
+            if (p.get('sales'))   document.getElementById('salesSelect').value  = p.get('sales');
+            if (p.get('rent'))    document.getElementById('rentSelect').value   = p.get('rent');
         }
 
         applyAllFilters();
     };
+
     window.addEventListener('scroll', () => {
         const btn = document.getElementById('scrollTop');
         btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
     });
+
     function displayData(list) {
         const container = document.getElementById('welfareList');
         const countEl   = document.getElementById('resultCount');
@@ -765,14 +707,10 @@
             card.style.animationDelay = `${Math.min(i * 0.04, 0.4)}s`;
             card.onclick = () => openModal(w);
 
-            // 성별 태그 (있을 때만)
-            const genderTagHtml = (w.gender && w.gender !== '.' && w.gender !== '전체')
-                ? `<span class="tag tag-gender">${w.gender}</span>`
-                : '';
-            // 특이사항 태그 (있을 때만)
+            const genderTagHtml  = (w.gender && w.gender !== '.' && w.gender !== '전체')
+                ? `<span class="tag tag-gender">${w.gender}</span>` : '';
             const specialTagHtml = (w.special && w.special !== '.')
-                ? `<span class="tag tag-special">${w.special}</span>`
-                : '';
+                ? `<span class="tag tag-special">${w.special}</span>` : '';
 
             card.innerHTML = `
             <div class="card-tags">
@@ -815,7 +753,7 @@
     function checkAndGo(url) { if (url) window.open(url, '_blank'); }
 
     function openModal(w) {
-        const genderTagHtml = (w.gender && w.gender !== '.' && w.gender !== '전체')
+        const genderTagHtml  = (w.gender && w.gender !== '.' && w.gender !== '전체')
             ? `<span class="tag tag-gender">${w.gender}</span>` : '';
         const specialTagHtml = (w.special && w.special !== '.')
             ? `<span class="tag tag-special">${w.special}</span>` : '';
@@ -845,8 +783,7 @@
         document.getElementById('modalDocs').innerHTML = docItems.length
             ? `<div><div class="modal-section-label">제출 서류</div><div class="doc-links">
                ${docItems.map(d => `<a href="${d.url}" target="_blank" class="doc-link">📄 ${d.name}</a>`).join('')}
-               </div></div>`
-            : '';
+               </div></div>` : '';
 
         let actionsHtml = '';
         if (w.infoUrl) {

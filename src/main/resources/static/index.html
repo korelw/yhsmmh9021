@@ -119,6 +119,10 @@
         ::-webkit-scrollbar-track{background:#e0ddd8}
         ::-webkit-scrollbar-thumb{background:var(--lime);border-radius:4px}
         ::-webkit-scrollbar-thumb:hover{background:var(--lime-dim)}
+        .filter-body::-webkit-scrollbar{width:4px}
+        .filter-body::-webkit-scrollbar-track{background:transparent}
+        .filter-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.1);border-radius:4px}
+        .filter-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,0.18)}
         @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         @media(max-width:768px){.layout{grid-template-columns:1fr}.sidebar{position:static}.stats-bar{gap:24px}.hero{padding:70px 20px 60px}.layout{padding:24px 20px 80px}}

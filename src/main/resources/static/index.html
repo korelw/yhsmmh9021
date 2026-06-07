@@ -259,6 +259,9 @@
                         <label class="checkbox-item">
                             <input type="checkbox" value="1인가구"><span>1인가구</span>
                         </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="장애인"><span>장애인</span>
+                        </label>
                     </div>
                 </div>
 
@@ -371,6 +374,7 @@
         { key: '신혼부부',        label: '신혼부부',           icon: '💍' },
         { key: '농어촌',          label: '농어촌',             icon: '🌾' },
         { key: '자립청년',        label: '자립청년',           icon: '🌱' },
+        { key: '장애인',            label: '장애인',          icon: '♿' }
     ];
 
     const API = 'https://yhsmmh9021-production-7630.up.railway.app/api/welfares';
@@ -492,20 +496,17 @@
                 return w.rent.includes(_rent);
             });
         }
-
-        // 성별 필터
         if (gender) {
             list = list.filter(w => {
                 if (!w.gender || w.gender === '.' || w.gender === '전체') return true;
                 return w.gender.includes(gender);
             });
         }
-
-
         if (selectedSpecials.length > 0) {
             list = list.filter(w => {
-                if (!w.special || w.special === '.') return false;
-
+                if (!w.special || w.special === '.') {
+                    return true;
+                }
                 return selectedSpecials.some(s =>
                     w.special.includes(s)
                 );

@@ -175,10 +175,10 @@
         .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
         .modal-text-info{font-size:13px;color:var(--text2);padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center;line-height:1.6}
         .filter-divider{height:1px;background:var(--border);margin:4px 0}
-        .checkbox-group{display:flex;flex-direction:column;gap:8px}
-        .checkbox-item{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0}
-        .checkbox-item input[type="checkbox"]{width:15px;height:15px;accent-color:var(--lime);cursor:pointer;flex-shrink:0}
-        .checkbox-item span{font-size:13px;color:var(--text2)}
+        .checkbox-group{display:flex;flex-direction:column;gap:4px}
+        .fg .checkbox-item{display:flex!important;align-items:center;gap:7px;cursor:pointer;padding:2px 0;margin:0!important;font-size:12px!important;font-weight:400!important;color:var(--text2)!important;letter-spacing:0!important;text-transform:none!important}
+        .fg .checkbox-item input[type="checkbox"]{width:13px;height:13px;accent-color:var(--lime);cursor:pointer;flex-shrink:0;margin:0}
+        .fg .checkbox-item span{font-size:12px;color:var(--text2)}
     </style>
 </head>
 <body>
@@ -362,6 +362,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
+    // ✅ 수정: 실제 DB 데이터에 맞는 SPECIALS 배열
     const SPECIALS = [
         { key: '학자금대출연체자', label: '학자금 대출 연체자', icon: '📚' },
         { key: '신혼부부',        label: '신혼부부',           icon: '💍' },
@@ -488,12 +489,16 @@
                 return w.rent.includes(_rent);
             });
         }
+
+        // 성별 필터
         if (gender) {
             list = list.filter(w => {
                 if (!w.gender || w.gender === '.' || w.gender === '전체') return true;
                 return w.gender.includes(gender);
             });
         }
+
+        // 특이사항 필터 (체크박스 OR 로직)
         const anyFilterActive = activeKeyword || activeTitle || _age || _income || _city || _district || _sales || _rent || gender || selectedSpecials.length > 0;
         list = list.filter(w => {
             if (!w.special || w.special === '.') return true;

@@ -175,6 +175,10 @@
         .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
         .modal-text-info{font-size:13px;color:var(--text2);padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center;line-height:1.6}
         .filter-divider{height:1px;background:var(--border);margin:4px 0}
+        .checkbox-group{display:flex;flex-direction:column;gap:8px}
+        .checkbox-item{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0}
+        .checkbox-item input[type="checkbox"]{width:15px;height:15px;accent-color:var(--lime);cursor:pointer;flex-shrink:0}
+        .checkbox-item span{font-size:13px;color:var(--text2)}
     </style>
 </head>
 <body>
@@ -234,17 +238,25 @@
 
                 <div class="filter-divider"></div>
 
-                <!-- ✅ 수정: 실제 DB 데이터에 맞는 특이사항 옵션 -->
                 <div class="fg">
-                    <label for="specialSelect">특이사항</label>
-                    <select id="specialSelect">
-                        <option value="">해당없음</option>
-                        <option value="학자금대출연체자">학자금 대출 연체자</option>
-                        <option value="신혼부부">신혼부부</option>
-                        <option value="농어촌">농어촌</option>
-                        <option value="자립청년">자립청년</option>
-                        <option value="군복무">군복무</option>
-                    </select>
+                    <label>특이사항 (해당하는 것 모두 선택)</label>
+                    <div class="checkbox-group" id="specialCheckboxes">
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="학자금대출연체자"><span>학자금 대출 연체자</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="신혼부부"><span>신혼부부</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="농어촌"><span>농어촌</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="자립청년"><span>자립청년</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="군복무"><span>군복무</span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="filter-divider"></div>
@@ -351,10 +363,10 @@
 
 <script>
     const SPECIALS = [
-        { key: '학자금대출연체자', label: '학자금 대출 연체자'},
-        { key: '신혼부부',        label: '신혼부부'},
-        { key: '농어촌',          label: '농어촌',},
-        { key: '자립청년',        label: '자립청년' },
+        { key: '학자금대출연체자', label: '학자금 대출 연체자', icon: '📚' },
+        { key: '신혼부부',        label: '신혼부부',           icon: '💍' },
+        { key: '농어촌',          label: '농어촌',             icon: '🌾' },
+        { key: '자립청년',        label: '자립청년',           icon: '🌱' },
     ];
 
     const API = 'https://yhsmmh9021-production-7630.up.railway.app/api/welfares';
@@ -384,7 +396,7 @@
 
         const _params   = new URLSearchParams();
         const gender    = document.getElementById('genderSelect').value;
-        const special   = document.getElementById('specialSelect').value;
+        const selectedSpecials = [...document.querySelectorAll('#specialCheckboxes input:checked')].map(el => el.value);
         const _age      = document.getElementById('ageInput').value;
         const _income   = document.getElementById('incomeSelect').value;
         const _city     = document.getElementById('regionCity').value;
@@ -401,7 +413,7 @@
         if (_sales)        _params.append('sales',   _sales);
         if (_rent)         _params.append('rent',    _rent);
         if (gender)        _params.append('gender',  gender);
-        if (special)       _params.append('special', special);
+        selectedSpecials.forEach(s => _params.append('special', s));
 
         currentParams = _params.toString();
         const shareBtn = document.getElementById('shareBtn');
@@ -476,21 +488,20 @@
                 return w.rent.includes(_rent);
             });
         }
-
         if (gender) {
             list = list.filter(w => {
                 if (!w.gender || w.gender === '.' || w.gender === '전체') return true;
                 return w.gender.includes(gender);
             });
         }
-        const anyFilterActive = activeKeyword || activeTitle || _age || _income || _city || _district || _sales || _rent || gender || special;
-
+        const anyFilterActive = activeKeyword || activeTitle || _age || _income || _city || _district || _sales || _rent || gender || selectedSpecials.length > 0;
         list = list.filter(w => {
             if (!w.special || w.special === '.') return true;
             if (!anyFilterActive) return true;
-            if (special) return w.special === special;
+            if (selectedSpecials.length > 0) return selectedSpecials.includes(w.special);
             return false;
         });
+
         displayData(list);
     }
 
@@ -533,7 +544,7 @@
     function resetFilters() {
         document.getElementById('ageInput').value      = '';
         document.getElementById('genderSelect').value  = '';
-        document.getElementById('specialSelect').value = '';
+        document.querySelectorAll('#specialCheckboxes input').forEach(el => el.checked = false);
         document.getElementById('incomeSelect').value  = '';
         document.getElementById('regionCity').value    = '';
         document.getElementById('regionDistrict').innerHTML = '<option value="">전체 (시/도만 적용)</option>';
@@ -628,7 +639,11 @@
                 });
             }
             if (p.get('gender'))  document.getElementById('genderSelect').value  = p.get('gender');
-            if (p.get('special')) document.getElementById('specialSelect').value = p.get('special');
+            const specials = p.getAll('special');
+            specials.forEach(s => {
+                const cb = document.querySelector(`#specialCheckboxes input[value="${s}"]`);
+                if (cb) cb.checked = true;
+            });
             if (p.get('age'))     document.getElementById('ageInput').value      = p.get('age');
             if (p.get('income'))  document.getElementById('incomeSelect').value  = p.get('income');
             if (p.get('city')) {

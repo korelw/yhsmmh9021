@@ -483,12 +483,11 @@
                 return w.gender.includes(gender);
             });
         }
-        if (special) {
-            list = list.filter(w => {
-                if (!w.special || w.special === '.') return false;
-                return w.special === special;
-            });
-        }
+        list = list.filter(w => {
+            if (!w.special || w.special === '.' || w.special === null) return true;
+            if (special) return w.special === special;
+            return false;
+        });
         displayData(list);
     }
 

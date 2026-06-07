@@ -7,36 +7,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Gmarket+Sans:wght@300;500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
-        :root{
-            --bg:#f7f5f2;
-            --bg2:#ffffff;
-            --bg3:#f0ede8;
-            --surface:#ffffff;
-            --surface2:#f0ede8;
-            --border:rgba(0,0,0,0.08);
-            --border2:rgba(0,0,0,0.14);
-            --text:#1a1814;
-            --text2:#5a5650;
-            --text3:#9a9690;
-            --lime:#2d7a3a;
-            --lime-dim:#1f5c2a;
-            --purple:#5b3fbf;
-            --purple-dim:#3d2a8a;
-            --red:#e03030;
-            --radius:16px;
-            --radius-sm:10px;
-        }
+        :root{--bg:#f7f5f2;--bg2:#ffffff;--bg3:#f0ede8;--surface:#ffffff;--surface2:#f0ede8;--border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);--text:#1a1814;--text2:#5a5650;--text3:#9a9690;--lime:#2d7a3a;--lime-dim:#1f5c2a;--purple:#5b3fbf;--purple-dim:#3d2a8a;--red:#e03030;--radius:16px;--radius-sm:10px;}
         html{scroll-behavior:smooth}
         body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-
         body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.15}
-
         header{position:sticky;top:0;z-index:50;background:rgba(247,245,242,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between}
         .logo{font-family:'Gmarket Sans',sans-serif;font-weight:700;font-size:17px;letter-spacing:-.03em;color:var(--text)}
         .logo span{color:var(--lime)}
         .header-badge{font-size:11px;font-weight:500;color:var(--text3);letter-spacing:.06em;border:1px solid var(--border2);padding:4px 12px;border-radius:999px}
-
         .hero{position:relative;padding:100px 32px 80px;text-align:center;overflow:hidden}
         .hero-glow{position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse at center,rgba(45,122,58,0.06) 0%,rgba(91,63,191,0.04) 40%,transparent 70%);pointer-events:none}
         .hero-label{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--lime);margin-bottom:28px;background:rgba(45,122,58,0.07);border:1px solid rgba(45,122,58,0.2);padding:6px 16px;border-radius:999px}
@@ -45,7 +23,6 @@
         .hero h1{font-family:'Gmarket Sans',sans-serif;font-size:clamp(40px,7vw,80px);font-weight:700;line-height:1.05;letter-spacing:-.04em;color:var(--text);margin-bottom:20px}
         .hero h1 em{font-style:normal;color:var(--lime)}
         .hero-sub{font-size:15px;font-weight:300;color:var(--text2);margin-bottom:48px;line-height:1.7}
-
         .search-wrap{display:flex;max-width:540px;margin:0 auto;background:var(--surface);border:1.5px solid var(--border2);border-radius:999px;padding:6px 6px 6px 24px;gap:8px;transition:border-color .2s,box-shadow .2s}
         .search-wrap:focus-within{border-color:var(--lime);box-shadow:0 0 0 4px rgba(45,122,58,0.06)}
         .search-wrap input{flex:1;background:transparent;border:none;outline:none;font-size:14px;font-family:inherit;color:var(--text)}
@@ -53,79 +30,63 @@
         .search-wrap button{background:var(--lime);color:#ffffff;border:none;border-radius:999px;padding:10px 26px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s,transform .1s;letter-spacing:-.01em;white-space:nowrap}
         .search-wrap button:hover{background:var(--lime-dim)}
         .search-wrap button:active{transform:scale(.96)}
-
         .stats-bar{display:flex;justify-content:center;gap:48px;padding:40px 32px;border-bottom:1px solid var(--border)}
         .stat{text-align:center}
         .stat-num{font-family:'Gmarket Sans',sans-serif;font-size:28px;font-weight:700;color:var(--text);letter-spacing:-.03em}
         .stat-num span{color:var(--lime);font-size:16px}
         .stat-label{font-size:11px;color:var(--text3);margin-top:4px;letter-spacing:.04em}
-
         .layout{max-width:1200px;margin:0 auto;padding:40px 32px 100px;display:grid;grid-template-columns:280px 1fr;gap:32px;align-items:start}
-
         .sidebar{position:sticky;top:80px;display:flex;flex-direction:column;gap:12px}
-        .filter-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+        .filter-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 100px)}
         .filter-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
         .filter-head-title{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text2)}
         .filter-reset{font-size:11px;color:var(--text3);cursor:pointer;background:none;border:none;font-family:inherit;transition:color .15s}
         .filter-reset:hover{color:var(--lime)}
-        .filter-body{padding:20px;display:flex;flex-direction:column;gap:16px}
-
+        .filter-body{padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;flex:1}
         .fg label{display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase}
         .fg input,.fg select{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;font-family:inherit;color:var(--text);outline:none;transition:border-color .15s,background .15s;appearance:none;-webkit-appearance:none}
         .fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239a9690' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;background-color:var(--bg2)}
         .fg input:focus,.fg select:focus{border-color:var(--lime);background:var(--bg3)}
         .fg select option{background:var(--bg2)}
-
         .sub-select-wrap{margin-top:8px;overflow:hidden;max-height:0;opacity:0;transition:max-height .25s ease,opacity .2s ease}
         .sub-select-wrap.visible{max-height:60px;opacity:1}
-
         .apply-btn{width:100%;background:var(--lime);color:#ffffff;border:none;border-radius:var(--radius-sm);padding:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s,transform .1s;letter-spacing:-.01em}
         .apply-btn:hover{background:var(--lime-dim)}
         .apply-btn:active{transform:scale(.98)}
-
         .tabs-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px}
         .tab-btn{background:var(--surface);border:1px solid var(--border);color:var(--text2);border-radius:999px;padding:8px 20px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;transition:all .15s;letter-spacing:-.01em}
         .tab-btn:hover{border-color:var(--lime);color:var(--lime)}
         .tab-btn.active{background:var(--lime);border-color:var(--lime);color:#ffffff;font-weight:700}
-
         .result-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
         .result-count{font-size:13px;color:var(--text3)}
         .result-count strong{color:var(--text);font-weight:700}
-
         .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
-
         .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;flex-direction:column;gap:14px;cursor:pointer;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s,border-color .2s;animation:rise .4s ease both;position:relative;overflow:hidden}
         .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--lime),var(--purple-dim));opacity:0;transition:opacity .2s}
         .card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,0.12);border-color:var(--border2)}
         .card:hover::before{opacity:1}
-
         .card-tags{display:flex;gap:5px;flex-wrap:wrap}
         .tag{font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:.04em}
         .tag-region{background:rgba(91,63,191,0.08);color:var(--purple);border:1px solid rgba(91,63,191,0.15)}
         .tag-keyword{background:rgba(45,122,58,0.06);color:var(--lime);border:1px solid rgba(200,241,53,0.15)}
         .tag-gender{background:rgba(224,48,48,0.06);color:var(--red);border:1px solid rgba(224,48,48,0.15)}
         .tag-special{background:rgba(91,63,191,0.06);color:var(--purple);border:1px solid rgba(91,63,191,0.15)}
-
         .card-title{font-size:15px;font-weight:700;line-height:1.5;color:var(--text);letter-spacing:-.02em}
         .card-divider{height:1px;background:var(--border)}
         .card-purpose{font-size:13px;line-height:1.75;color:var(--text2);flex:1;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-
         .card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
         .card-agency{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px}
         .agency-dot{width:5px;height:5px;border-radius:50%;background:var(--lime);opacity:.7;flex-shrink:0}
         .card-more{font-size:12px;font-weight:700;color:var(--lime);display:flex;align-items:center;gap:3px;letter-spacing:-.01em}
         .card-more svg{transition:transform .2s}
         .card:hover .card-more svg{transform:translateX(4px)}
-
         .empty{grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:80px 20px;text-align:center;color:var(--text3)}
         .empty-icon{font-size:40px;margin-bottom:16px;filter:grayscale(1);opacity:.5}
         .empty p{font-size:14px}
-
         .modal-backdrop{position:fixed;inset:0;background:rgba(26,24,20,0.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .25s;pointer-events:none}
         .modal-backdrop.open{opacity:1;pointer-events:all}
         .modal{background:var(--bg2);border:1px solid var(--border);border-radius:24px;width:100%;max-width:580px;max-height:88vh;overflow-y:auto;transform:translateY(32px) scale(.96);transition:transform .35s cubic-bezier(.34,1.56,.64,1);box-shadow:0 24px 60px rgba(0,0,0,0.15)}
         .modal-backdrop.open .modal{transform:translateY(0) scale(1)}
-
         .modal-top-bar{height:3px;background:linear-gradient(90deg,var(--lime),var(--purple-dim));border-radius:24px 24px 0 0}
         .modal-header{padding:24px 28px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border)}
         .modal-header-left{display:flex;flex-direction:column;gap:12px}
@@ -133,7 +94,6 @@
         .modal-title{font-size:19px;font-weight:700;line-height:1.4;color:var(--text);letter-spacing:-.03em}
         .modal-close{background:var(--surface);border:1px solid var(--border);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s,border-color .15s;color:var(--text2);font-size:16px}
         .modal-close:hover{background:var(--surface2);border-color:var(--border2)}
-
         .modal-body{padding:28px;display:flex;flex-direction:column;gap:24px}
         .modal-section-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
         .modal-purpose{font-size:14px;line-height:1.85;color:var(--text2);white-space:pre-wrap}
@@ -155,30 +115,26 @@
         .share-btn:hover{border-color:var(--lime);color:var(--lime)}
         .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--text);color:var(--bg);font-size:13px;font-weight:600;padding:10px 20px;border-radius:999px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:200}
         .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
         ::-webkit-scrollbar{width:10px}
         ::-webkit-scrollbar-track{background:#e0ddd8}
         ::-webkit-scrollbar-thumb{background:var(--lime);border-radius:4px}
         ::-webkit-scrollbar-thumb:hover{background:var(--lime-dim)}
-
         @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-
-        @media(max-width:768px){
-            .layout{grid-template-columns:1fr}
-            .sidebar{position:static}
-            .stats-bar{gap:24px}
-            .hero{padding:70px 20px 60px}
-            .layout{padding:24px 20px 80px}
-        }
-
+        @media(max-width:768px){.layout{grid-template-columns:1fr}.sidebar{position:static}.stats-bar{gap:24px}.hero{padding:70px 20px 60px}.layout{padding:24px 20px 80px}}
         .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
         .modal-text-info{font-size:13px;color:var(--text2);padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center;line-height:1.6}
         .filter-divider{height:1px;background:var(--border);margin:4px 0}
         .checkbox-group{display:flex;flex-direction:column;gap:4px}
-        .fg .checkbox-item{display:flex!important;align-items:center;gap:7px;cursor:pointer;padding:2px 0;margin:0!important;font-size:12px!important;font-weight:400!important;color:var(--text2)!important;letter-spacing:0!important;text-transform:none!important}
-        .fg .checkbox-item input[type="checkbox"]{width:13px;height:13px;accent-color:var(--lime);cursor:pointer;flex-shrink:0;margin:0}
-        .fg .checkbox-item span{font-size:12px;color:var(--text2)}
+        .fg span.filter-label{display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase}
+        .checkbox-item{display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 8px;border-radius:8px;font-size:12px;font-weight:400;color:var(--text2);transition:background .15s}
+        .checkbox-item:hover{background:var(--bg3)}
+        .checkbox-item input[type="checkbox"]{appearance:none;-webkit-appearance:none;width:16px;height:16px;border:1.5px solid var(--border2);border-radius:4px;background:var(--bg2);cursor:pointer;flex-shrink:0;margin:0;transition:background .15s,border-color .15s;position:relative}
+        .checkbox-item input[type="checkbox"]:checked{background:var(--lime);border-color:var(--lime)}
+        .checkbox-item input[type="checkbox"]:checked::after{content:'';position:absolute;top:2px;left:5px;width:4px;height:7px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg)}
+        .checkbox-item input[type="checkbox"]:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+        .checkbox-item:has(input:checked){background:rgba(45,122,58,0.06);color:var(--lime);font-weight:600}
+        .checkbox-item span{font-size:12px;transition:color .15s}
     </style>
 </head>
 <body>
@@ -238,28 +194,29 @@
 
                 <div class="filter-divider"></div>
 
+                <!-- ✅ 수정: <label> → <span class="filter-label"> 로 변경해 label 중첩 제거 -->
                 <div class="fg">
-                    <span style="display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase">특이사항 (해당하는 것 모두 선택)</span>
+                    <span class="filter-label">특이사항 (해당하는 것 모두 선택)</span>
                     <div class="checkbox-group" id="specialCheckboxes">
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" for="sp1">
                             <input type="checkbox" id="sp1" value="학자금대출연체자"><span>학자금 대출 연체자</span>
                         </label>
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" for="sp2">
                             <input type="checkbox" id="sp2" value="신혼부부"><span>신혼부부</span>
                         </label>
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" for="sp3">
                             <input type="checkbox" id="sp3" value="농어촌"><span>농어촌</span>
                         </label>
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" for="sp4">
                             <input type="checkbox" id="sp4" value="자립청년"><span>자립청년</span>
                         </label>
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" for="sp5">
                             <input type="checkbox" id="sp5" value="군복무"><span>군복무</span>
                         </label>
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" for="sp6">
                             <input type="checkbox" id="sp6" value="1인가구"><span>1인가구</span>
                         </label>
-                        <label class="checkbox-item">
+                        <label class="checkbox-item" for="sp7">
                             <input type="checkbox" id="sp7" value="장애인"><span>장애인</span>
                         </label>
                     </div>
@@ -319,6 +276,8 @@
                     </select>
                 </div>
 
+            </div>
+            <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--surface)">
                 <button class="apply-btn" onclick="applyCustomFilter()">조건 적용하기</button>
             </div>
         </div>
@@ -368,13 +327,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
-    // ✅ 수정: 실제 DB 데이터에 맞는 SPECIALS 배열
     const SPECIALS = [
         { key: '학자금대출연체자', label: '학자금 대출 연체자', icon: '📚' },
         { key: '신혼부부',        label: '신혼부부',           icon: '💍' },
         { key: '농어촌',          label: '농어촌',             icon: '🌾' },
         { key: '자립청년',        label: '자립청년',           icon: '🌱' },
-        { key: '장애인',            label: '장애인',          icon: '♿' }
+        { key: '장애인',          label: '장애인',             icon: '♿' }
     ];
 
     const API = 'https://yhsmmh9021-production-7630.up.railway.app/api/welfares';
@@ -496,20 +454,18 @@
                 return w.rent.includes(_rent);
             });
         }
+
         if (gender) {
             list = list.filter(w => {
                 if (!w.gender || w.gender === '.' || w.gender === '전체') return true;
                 return w.gender.includes(gender);
             });
         }
+
         if (selectedSpecials.length > 0) {
             list = list.filter(w => {
-                if (!w.special || w.special === '.') {
-                    return true;
-                }
-                return selectedSpecials.some(s =>
-                    w.special.includes(s)
-                );
+                if (!w.special || w.special === '.') return true;
+                return selectedSpecials.some(s => w.special.includes(s));
             });
         }
 

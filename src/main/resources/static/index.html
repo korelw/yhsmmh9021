@@ -483,8 +483,11 @@
                 return w.gender.includes(gender);
             });
         }
+        const anyFilterActive = activeKeyword || activeTitle || _age || _income || _city || _district || _sales || _rent || gender || special;
+
         list = list.filter(w => {
-            if (!w.special || w.special === '.' || w.special === null) return true;
+            if (!w.special || w.special === '.') return true;
+            if (!anyFilterActive) return true;
             if (special) return w.special === special;
             return false;
         });

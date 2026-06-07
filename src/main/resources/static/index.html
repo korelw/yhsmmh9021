@@ -501,14 +501,16 @@
             });
         }
 
-        // 특이사항 필터 (체크박스 OR 로직)
-        const anyFilterActive = activeKeyword || activeTitle || _age || _income || _city || _district || _sales || _rent || gender || selectedSpecials.length > 0;
-        list = list.filter(w => {
-            if (!w.special || w.special === '.') return true;
-            if (!anyFilterActive) return true;
-            if (selectedSpecials.length > 0) return selectedSpecials.includes(w.special);
-            return false;
-        });
+
+        if (selectedSpecials.length > 0) {
+            list = list.filter(w => {
+                if (!w.special || w.special === '.') return false;
+
+                return selectedSpecials.some(s =>
+                    w.special.includes(s)
+                );
+            });
+        }
 
         displayData(list);
     }

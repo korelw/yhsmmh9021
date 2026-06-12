@@ -163,7 +163,7 @@
     <p class="hero-sub">나이 · 지역 · 소득에 맞는 지원 정책을 한눈에 확인하세요</p>
     <div class="search-wrap">
         <label for="searchInput" class="visually-hidden">정책 이름 검색</label>
-        <input type="text" id="searchInput" placeholder="정책 이름으로 검색..." onkeypress="handleKeyPress(event)">
+        <input type="text" id="searchInput" placeholder="정책 이름으로 검색..." onkeypress="handleKeyPress(event)" oninput="onSearchInput()">
         <button onclick="searchByTitle()">검색</button>
     </div>
 </section>
@@ -495,12 +495,18 @@
         applyAllFilters();
     }
 
+    // ✅ 검색창 글자를 지우면 즉시 activeTitle 초기화 후 재필터링
+    function onSearchInput() {
+        if (!document.getElementById('searchInput').value.trim()) {
+            activeTitle = '';
+            if (allData.length > 0) applyAllFilters();
+        }
+    }
+
     async function selectKeyword(keyword, btn) {
         setActive(btn);
         activeKeyword = keyword;
-        // ✅ 탭 전환 시 검색창과 activeTitle 함께 초기화
-        activeTitle   = '';
-        document.getElementById('searchInput').value = '';
+        // 탭 전환 시 검색창은 건드리지 않음 → 검색어+카테고리 교집합 유지
         await ensureData();
         applyAllFilters();
     }
@@ -508,9 +514,6 @@
     async function searchByTitle() {
         const title = document.getElementById('searchInput').value.trim();
         if (!title) { alert('검색어를 입력하세요.'); return; }
-        // 검색 시 탭은 전체보기로 리셋
-        activeKeyword = '';
-        document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
         await ensureData();
         applyAllFilters();
     }

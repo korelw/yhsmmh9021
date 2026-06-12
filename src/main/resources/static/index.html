@@ -198,7 +198,6 @@
 
                 <div class="filter-divider"></div>
 
-                <!-- ✅ 수정: <label> → <span class="filter-label"> 로 변경해 label 중첩 제거 -->
                 <div class="fg">
                     <span class="filter-label">특이사항 (중복 선택 가능)</span>
                     <div class="checkbox-group" id="specialCheckboxes">
@@ -331,16 +330,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-    const SPECIALS = [
-        { key: '학자금대출연체자', label: '학자금 대출 연체자', icon: '📚' },
-        { key: '신혼부부',        label: '신혼부부',           icon: '💍' },
-        { key: '농어촌',          label: '농어촌',             icon: '🌾' },
-        { key: '자립청년',        label: '자립청년',           icon: '🌱' },
-        { key: '장애인',          label: '장애인',             icon: '♿' }
-    ];
-
     const API = 'https://yhsmmh9021-production-7630.up.railway.app/api/welfares';
-    let allData      = [];
+    let allData       = [];
     let activeKeyword = '';
     let activeTitle   = '';
     let currentParams = null;
@@ -364,15 +355,18 @@
     function applyAllFilters() {
         let list = [...allData];
 
-        const _params   = new URLSearchParams();
-        const gender    = document.getElementById('genderSelect').value;
+        // ✅ 항상 입력창 값과 activeTitle 동기화 (검색어 지워도 자동 반영)
+        activeTitle = document.getElementById('searchInput').value.trim();
+
+        const _params          = new URLSearchParams();
+        const gender           = document.getElementById('genderSelect').value;
         const selectedSpecials = [...document.querySelectorAll('#specialCheckboxes input:checked')].map(el => el.value);
-        const _age      = document.getElementById('ageInput').value;
-        const _income   = document.getElementById('incomeSelect').value;
-        const _city     = document.getElementById('regionCity').value;
-        const _district = document.getElementById('regionDistrict').value;
-        const _sales    = document.getElementById('salesSelect').value;
-        const _rent     = document.getElementById('rentSelect').value;
+        const _age             = document.getElementById('ageInput').value;
+        const _income          = document.getElementById('incomeSelect').value;
+        const _city            = document.getElementById('regionCity').value;
+        const _district        = document.getElementById('regionDistrict').value;
+        const _sales           = document.getElementById('salesSelect').value;
+        const _rent            = document.getElementById('rentSelect').value;
 
         if (activeTitle)   _params.append('title',   activeTitle);
         if (activeKeyword) _params.append('keyword', activeKeyword);
@@ -391,14 +385,17 @@
         if (currentParams) history.replaceState({}, '', '?' + currentParams);
         else history.replaceState({}, '', location.pathname);
 
+        // 제목 검색
         if (activeTitle) {
             list = list.filter(w => w.title && w.title.includes(activeTitle));
         }
 
+        // 키워드(탭) 필터
         if (activeKeyword) {
             list = list.filter(w => w.keyword && w.keyword.includes(activeKeyword));
         }
 
+        // 나이 필터
         if (_age) {
             list = list.filter(w => {
                 if (!w.age || w.age === '' || w.age === '.') return true;
@@ -421,6 +418,7 @@
             });
         }
 
+        // 소득 필터
         if (_income) {
             list = list.filter(w => {
                 if (!w.income) return false;
@@ -433,6 +431,7 @@
             });
         }
 
+        // 지역 필터
         if (_city || _district) {
             list = list.filter(w => {
                 if (!w.area) return false;
@@ -443,6 +442,7 @@
             });
         }
 
+        // 매출액 필터
         if (_sales) {
             list = list.filter(w => {
                 if (!w.sales) return false;
@@ -451,6 +451,7 @@
             });
         }
 
+        // 임차료 필터
         if (_rent) {
             list = list.filter(w => {
                 if (!w.rent) return false;
@@ -459,6 +460,7 @@
             });
         }
 
+        // 성별 필터
         if (gender) {
             list = list.filter(w => {
                 if (!w.gender || w.gender === '.' || w.gender === '전체') return true;
@@ -466,6 +468,7 @@
             });
         }
 
+        // ✅ 특이사항 필터 (1인가구 포함 모든 체크박스 값 처리)
         if (selectedSpecials.length > 0) {
             list = list.filter(w => {
                 if (!w.special || w.special === '.') return true;
@@ -495,6 +498,9 @@
     async function selectKeyword(keyword, btn) {
         setActive(btn);
         activeKeyword = keyword;
+        // ✅ 탭 전환 시 검색창과 activeTitle 함께 초기화
+        activeTitle   = '';
+        document.getElementById('searchInput').value = '';
         await ensureData();
         applyAllFilters();
     }
@@ -502,7 +508,9 @@
     async function searchByTitle() {
         const title = document.getElementById('searchInput').value.trim();
         if (!title) { alert('검색어를 입력하세요.'); return; }
-        activeTitle = title;
+        // 검색 시 탭은 전체보기로 리셋
+        activeKeyword = '';
+        document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
         await ensureData();
         applyAllFilters();
     }
